@@ -1,4 +1,4 @@
-#!/bin/env python3
+#!/usr/bin/env python3
 
 import mido, argparse
 from mido import Message, MidiFile, MidiTrack
