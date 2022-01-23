@@ -24,7 +24,7 @@ can control a number of internal settings via MIDI too: just send SYS_EX command
 project, but it is taking shape as such and it *could* become a complete project with a small amount of work.
 
 ### Wiring diagram
-See pictures. You can wire it differently, just make sure to change the relevant PINs in the code.
+See [pictures](https://pianoclack.com/forum/d/276/3). You can wire it differently, just make sure to change the relevant PINs in the code.
 
 ### Benefits of this approach
 * The RP2040 (and the Raspberry Pi Pico) is not experiencing any chip shortage as many other competing boards
@@ -78,6 +78,7 @@ tests and situation that could happen in real life playing. It might still turn 
 * [RP2040 in bulk](https://www.raspberrypi.com/news/raspberry-pi-direct-buy-rp2040-in-bulk-from-just-0-70/)
 * RP2040 in small quantities can be purchased from the usual places, Adafruit, Arrow, Digi-Key, Mouser, Pimoroni, etc
 * Frequency of the sampling, discussed at https://github.com/jkominek/piano-conversion/issues/46 and links within.
+* More pictures and discussion at https://pianoclack.com/forum/d/276-build-your-own-hybrid-piano-step-three-the-electronics
 
 
 ### Last updated
