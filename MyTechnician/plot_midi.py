@@ -57,4 +57,5 @@ if args.save:
             pass
 
     mid.save(args.save)
+    print("")                 # overwritten by the CTRL-C
     print(args.save, "saved")
