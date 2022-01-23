@@ -3,7 +3,6 @@
 import argparse
 import mido
 from mido import Message, MidiFile, MidiTrack
-import matplotlib.pyplot as plt
 from cdefine import CDefine
 
 parser = argparse.ArgumentParser()
@@ -19,6 +18,7 @@ if ((args.save is     None and args.load is     None) or
 defined = CDefine('../RaspberryPiPico/My_MIDI_constants.h')
 
 if args.load:
+    import matplotlib.pyplot as plt      # importing here to allow saving without GTK
     x = []
     y = []
     i = 0
