@@ -9,9 +9,12 @@
 #define MIDI_CONTINUE_REGULATION 0x7B   // custom command to continue (or finish) regulating
 #define MIDI_DUMP_REGULATION     0x7A   // custom command to dump regulation parameters for one note
 #define INIT_PICO                0x79   // custom command to init each pico (observed only at the beginning)
-#define MIDI_NO_SUCH_NOTE        0x78   // bits the ADC will never use
-#define MIDI_ERROR               0x77   // bits the ADC will never use
+#define MIDI_NO_SUCH_NOTE        0x78
+#define MIDI_ERROR               0x77
 #define MIDI_ITER_PER_MS         0x40   // bits the ADC will never use, adding one for each pico, can be max 0x77
+
+#define MIDI_MAX_ADC_VALUE       0x31   // maximum value of the highest byte of the ADC. Make sure
+                                        // all other MIDI constants here are higher than this.
 
 #define MIDI_NOTE_ON       0x90
 #define MIDI_NOTE_OFF      0x80
