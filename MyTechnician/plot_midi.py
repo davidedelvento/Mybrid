@@ -24,7 +24,7 @@ if args.load:
     i = 0
 
     for msg in MidiFile(args.load).play():
-        if msg.type is 'sysex':
+        if msg.type == 'sysex':
             if (msg.data[0] == defined.MIDI_VENDOR and
                 msg.data[1] <= defined.MIDI_MAX_ADC_VALUE):
 
