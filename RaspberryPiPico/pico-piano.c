@@ -238,12 +238,13 @@ void i2c_listener() {
     have_been_init = true;
     send(packet);
 #elif defined MIDI_CONTROLLER
-    n_pico = ++packet[3]; // TODO bail out if more than 7F (see also MIDI_ERROR definition)
+    n_pico = ++packet[3]; // TODO bail out if more than possible (see also MIDI_ERROR definition)
+    tud_midi_stream_write(0, packet, SYSEX_PKG_LEN);  // let the computer know
 #endif
 
   }
 #ifdef WORKER
-  else {                    // gotten an non-init packet, should never happen
+  else {                      // gotten an non-init packet, should never happen
     send(packet);             // rely whatever the packet was and send an error
     packet[0] = MIDI_SYS_EX;
     packet[1] = MIDI_VENDOR;
