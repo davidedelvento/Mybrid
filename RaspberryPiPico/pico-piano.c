@@ -450,17 +450,17 @@ void regulate_note(uint8_t my_note) {
   while(true) {
 #ifdef MIDI_CONTROLLER
     tud_task(); // keep MIDI over USB alive
-#endif
     if (tud_midi_available()) {
-      // TODO needs to read over i2c for the other picos
-      // outside to the tud_midi_available if...
       tud_midi_stream_read(packet, SYSEX_PKG_LEN);
+#elif defined WORKER
+    if (queue_try_remove(&sysex_buffer, packet)) {
+#endif
       if (packet[0] == MIDI_SYS_EX && packet[1] == MIDI_VENDOR) {
         if (packet[2] == MIDI_CONTINUE_REGULATION) {
 	  if (i++ == 6) { // needs a final dummy 'continue' to exit
 	    break;
 	  }
-	  switch (i) {
+	  switch (i) {    // TODO: packet is underutilized, add constants to select what to regulate?
             case 1:
 	      LET_OFF[my_note] = ((uint16_t)packet[3] << 7) + packet[4];
 	      break;
