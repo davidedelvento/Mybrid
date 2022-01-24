@@ -218,6 +218,7 @@ static void inline receive(uint8_t *src) {
 
 #define STATS_EVERY 5000 // measure/report average iterations and roundtrips every 5 seconds
 
+// this runs on core1
 void i2c_listener() {
   uint8_t packet[SYSEX_PKG_LEN];
 #ifdef MIDI_CONTROLLER
@@ -242,7 +243,7 @@ void i2c_listener() {
     have_been_init = true;
     send(packet);
 #elif defined MIDI_CONTROLLER
-    n_pico = ++packet[3]; // TODO bail out if more than possible (see also MIDI_ERROR definition)
+    n_pico = ++packet[3]; // TODO bail out if more than possible (127? TBC)
     tud_midi_stream_write(0, packet, SYSEX_PKG_LEN);  // let the computer know
 #endif
 
@@ -405,7 +406,7 @@ void dump_note_adc(uint8_t my_note) {
       }
       packet[0] = MIDI_SYS_EX;
       packet[1] = MIDI_VENDOR;
-      packet[2] = 0x7F & (distance[my_note] >> 7);    // highest 7 bits, the ADC is 12 bit, max here is 31
+      packet[2] = 0x7F & (distance[my_note] >> 7);    // highest 7 bits, the ADC is 12 bit, max here is 31 -- VERY IMPORTANT
       packet[3] = 0x7F & distance[my_note];           // lowest  7 bits
                                                       // if more than 14 bits, we need another byte
       packet[4] = midi_note_id;  // already 7 bits
