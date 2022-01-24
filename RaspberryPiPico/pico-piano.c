@@ -221,6 +221,8 @@ static void inline receive(uint8_t *src) {
 void i2c_listener() {
   uint8_t packet[SYSEX_PKG_LEN];
 #ifdef MIDI_CONTROLLER
+  uint32_t current_time, time_when_sent = 0;
+  bool received = false;
   packet[0] = MIDI_SYS_EX;
   packet[1] = MIDI_VENDOR;
   packet[2] = INIT_PICO;
@@ -258,8 +260,6 @@ void i2c_listener() {
   }                           // TODO should also continue waiting for the missing init packet?
 #endif
 
-  uint32_t current_time, time_when_sent = 0;
-  bool received = false;
   while(true) {
 #ifdef MIDI_CONTROLLER
     current_time = board_millis();
@@ -586,14 +586,14 @@ void count_loop_iterations() {
   loop_iterations ++;
 
   uint32_t current_time = board_millis();
-  if (current_time - last_stats_time_ms >= ITERATIONS_EVERY) {
+  if (current_time - last_stats_time_ms >= STATS_EVERY) {
     last_stats_time_ms = current_time;
     uint8_t packet[SYSEX_PKG_LEN];
     packet[0] = MIDI_SYS_EX;
     packet[1] = MIDI_VENDOR;
     packet[2] = MIDI_ITER_PER_MS;
     packet[3] = my_pico_id;
-    uint32_t iter_per_ms = (uint32_t) (loop_iterations / ITERATIONS_EVERY);
+    uint32_t iter_per_ms = (uint32_t) (loop_iterations / STATS_EVERY);
     if (iter_per_ms < 0x7F) {
       packet[4] = iter_per_ms & 0x7F;
     } else {                                 // overflow
