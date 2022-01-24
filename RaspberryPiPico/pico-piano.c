@@ -263,7 +263,7 @@ void i2c_listener() {
   while(true) {
 #ifdef MIDI_CONTROLLER
     current_time = board_millis();
-    if (current_time - time_when_sent >= ITERATIONS_EVERY && received){
+    if (current_time - time_when_sent >= STATS_EVERY && received){
       packet[0] = MIDI_SYS_EX;
       packet[1] = MIDI_VENDOR;
       packet[2] = MIDI_ROUNDTRIP_TIME;
@@ -287,7 +287,6 @@ void i2c_listener() {
       packet[5] = MIDI_END_SYSEX;
       received = true;
       tud_midi_stream_write(0, packet, SYSEX_PKG_LEN);
-      }
     }
 #elif defined WORKER
     send(packet);
