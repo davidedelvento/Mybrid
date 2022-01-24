@@ -216,13 +216,13 @@ static void inline receive(uint8_t *src) {
   i2c_read_raw_blocking(i2c1, src, SYSEX_PKG_LEN);
 }
 
-#define STATS_EVERY 5000 // average and report iterations and roundtrips every 5 seconds
+#define STATS_EVERY 5000 // measure/report average iterations and roundtrips every 5 seconds
 
 void i2c_listener() {
   uint8_t packet[SYSEX_PKG_LEN];
 #ifdef MIDI_CONTROLLER
   uint32_t current_time, time_when_sent = 0;
-  bool received = false;
+  bool received = true;      // so it can send the next one
   packet[0] = MIDI_SYS_EX;
   packet[1] = MIDI_VENDOR;
   packet[2] = INIT_PICO;
