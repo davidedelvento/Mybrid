@@ -9,7 +9,7 @@
 #define MIDI_CONTINUE_REGULATION 0x7B   // custom command to continue (or finish) regulating
 #define MIDI_DUMP_REGULATION     0x7A   // custom command to dump regulation parameters for one note
 #define INIT_PICO                0x79   // custom command to init each pico (at the beginning) or measuring roundtrip time
-#define MIDI_ROUNDTRIP_TIME      0x79   // custom command to init each pico (at the beginning) or measuring roundtrip time
+#define MIDI_ROUNDTRIP_TIME_uS   0x79   // custom command to init each pico (at the beginning) or measuring roundtrip time
 #define MIDI_NO_SUCH_NOTE        0x78
 #define MIDI_ERROR               0x77
 #define MIDI_ITER_PER_MS         0x40   // bits the ADC will never use, adding one for each pico, can be max 0x77

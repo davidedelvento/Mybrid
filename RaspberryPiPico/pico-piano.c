@@ -221,7 +221,7 @@ static void inline receive(uint8_t *src) {
 void i2c_listener() {
   uint8_t packet[SYSEX_PKG_LEN];
 #ifdef MIDI_CONTROLLER
-  uint32_t current_time, time_when_sent = 0;
+  absolute_time_t current_time, time_when_sent = 0;
   bool received = true;      // so it can send the next one
   packet[0] = MIDI_SYS_EX;
   packet[1] = MIDI_VENDOR;
@@ -262,11 +262,11 @@ void i2c_listener() {
 
   while(true) {
 #ifdef MIDI_CONTROLLER
-    current_time = board_millis();
-    if (current_time - time_when_sent >= STATS_EVERY && received){
+    current_time = get_absolute_time();
+    if (absolute_time_diff_us(time_when_sent, current_time) >= STATS_EVERY * 1000 && received){
       packet[0] = MIDI_SYS_EX;
       packet[1] = MIDI_VENDOR;
-      packet[2] = MIDI_ROUNDTRIP_TIME;
+      packet[2] = MIDI_ROUNDTRIP_TIME_uS;
       send(packet);
       received = false;
       time_when_sent = current_time;
@@ -274,11 +274,11 @@ void i2c_listener() {
 #endif
     receive(packet);
 #ifdef MIDI_CONTROLLER
-    current_time = board_millis();
+    current_time = get_absolute_time();
     if (packet[0] == MIDI_SYS_EX &&
         packet[1] == MIDI_VENDOR &&
-        packet[2] == MIDI_ROUNDTRIP_TIME) {
-      uint32_t roundtrip = current_time - time_when_sent;
+        packet[2] == MIDI_ROUNDTRIP_TIME_uS) {
+      int64_t roundtrip = absolute_time_diff_us(time_when_sent, current_time);
       if (roundtrip > 0x3FFF) {
         roundtrip = 0x3FFF; // max value possible via MIDI
       }
@@ -286,7 +286,7 @@ void i2c_listener() {
       packet[4] = 0x7F & roundtrip;
       packet[5] = MIDI_END_SYSEX;
       received = true;
-      tud_midi_stream_write(0, packet, SYSEX_PKG_LEN);
+      // not necessary to send via MIDI here, will send a few lines below
     }
 #elif defined WORKER
     send(packet);
@@ -582,11 +582,15 @@ void led_blinking_task(void) {
 void count_loop_iterations() {
   static uint64_t loop_iterations = 0;
   static uint32_t last_stats_time_ms = 0;
+//absolute_time_t last_stats_time = get_absolute_time();
   loop_iterations ++;
 
   uint32_t current_time = board_millis();
+  //absolute_time_t current_time = get_absolute_time();
   if (current_time - last_stats_time_ms >= STATS_EVERY) {
+  //if (absolute_time_diff_us(last_stats_time, current_time) >= STATS_EVERY){
     last_stats_time_ms = current_time;
+    //last_stats_time = current_time;
     uint8_t packet[SYSEX_PKG_LEN];
     packet[0] = MIDI_SYS_EX;
     packet[1] = MIDI_VENDOR;
