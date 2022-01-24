@@ -258,10 +258,38 @@ void i2c_listener() {
   }                           // TODO should also continue waiting for the missing init packet?
 #endif
 
+  uint32_t current_time, time_when_sent = 0;
+  bool received = false;
   while(true) {
+#ifdef MIDI_CONTROLLER
+    current_time = board_millis();
+    if (current_time - time_when_sent >= ITERATIONS_EVERY && received){
+      packet[0] = MIDI_SYS_EX;
+      packet[1] = MIDI_VENDOR;
+      packet[2] = MIDI_ROUNDTRIP_TIME;
+      send(packet);
+      received = false;
+      time_when_sent = current_time;
+    }
+#endif
     receive(packet);
-
-#ifdef WORKER
+#ifdef MIDI_CONTROLLER
+    current_time = board_millis();
+    if (packet[0] == MIDI_SYS_EX &&
+        packet[1] == MIDI_VENDOR &&
+        packet[2] == MIDI_ROUNDTRIP_TIME) {
+      uint32_t roundtrip = current_time - time_when_sent;
+      if (roundtrip > 0x3FFF) {
+        roundtrip = 0x3FFF; // max value possible via MIDI
+      }
+      packet[3] = 0x7F & (roundtrip >> 7);
+      packet[4] = 0x7F & roundtrip;
+      packet[5] = MIDI_END_SYSEX;
+      received = true;
+      tud_midi_stream_write(0, packet, SYSEX_PKG_LEN);
+      }
+    }
+#elif defined WORKER
     send(packet);
 #endif
 
