@@ -460,7 +460,7 @@ void regulate_note(uint8_t my_note) {
 	  if (i++ == 6) { // needs a final dummy 'continue' to exit
 	    break;
 	  }
-	  switch (i) {    // TODO: packet is underutilized, add constants to select what to regulate?
+	  switch (i) {    // TODO: packet is underutilized, add constant to select what to regulate, and repeat note number?
             case 1:
 	      LET_OFF[my_note] = ((uint16_t)packet[3] << 7) + packet[4];
 	      break;
