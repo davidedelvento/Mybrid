@@ -216,6 +216,8 @@ static void inline receive(uint8_t *src) {
   i2c_read_raw_blocking(i2c1, src, SYSEX_PKG_LEN);
 }
 
+#define STATS_EVERY 5000 // average and report iterations and roundtrips every 5 seconds
+
 void i2c_listener() {
   uint8_t packet[SYSEX_PKG_LEN];
 #ifdef MIDI_CONTROLLER
@@ -556,14 +558,14 @@ void count_loop_iterations() {
   loop_iterations ++;
 
   uint32_t current_time = board_millis();
-  if (current_time - last_stats_time_ms >= 10000) { // only once a second
+  if (current_time - last_stats_time_ms >= ITERATIONS_EVERY) {
     last_stats_time_ms = current_time;
     uint8_t packet[SYSEX_PKG_LEN];
     packet[0] = MIDI_SYS_EX;
     packet[1] = MIDI_VENDOR;
     packet[2] = MIDI_ITER_PER_MS;
     packet[3] = my_pico_id;
-    uint32_t iter_per_ms = (uint32_t) (loop_iterations / 10000);
+    uint32_t iter_per_ms = (uint32_t) (loop_iterations / ITERATIONS_EVERY);
     if (iter_per_ms < 0x7F) {
       packet[4] = iter_per_ms & 0x7F;
     } else {                                 // overflow
