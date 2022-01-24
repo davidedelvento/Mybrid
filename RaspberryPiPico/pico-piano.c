@@ -295,8 +295,7 @@ void tud_resume_cb(void) {   // Invoked when usb bus is resumed
 #endif
 
 uint8_t midi_vel(uint32_t time, uint8_t note) {
-  // The & 127 is needed to remove bits not allowed by MIDI, in case the formula generates them
-  uint8_t ret = (uint8_t)(VEL_CONST[note] - VEL_SLOPE[note] * log10f(time)) & 127;
+  uint8_t ret = (uint8_t)(VEL_CONST[note] - VEL_SLOPE[note] * log10f(time));
   ret = 80;
   return ret;  // TODO
 }
