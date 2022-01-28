@@ -18,6 +18,11 @@
 
 #define MIDI_MAX_ADC_VALUE       0x1F   // maximum value of the highest byte of the ADC. Make sure all other MIDI constants
                                         // here are higher than this, otherwise ambiguity in packets meaning will arise.
+					// Note that the RP2040 ADC is 12 bit and can be split in 7 + 5. Even a 14 bit
+					// ADC will require full 7 + 7 bit which is the maximum possible payload
+					// in MIDI v1 for the selected packet size. So we'd have to increase packet size
+					// or switch to Universal Midi Packet (UMP) which implies MIDI v2
+					//
 					// See VERY IMPORTANT comment in the C code to see how it works.
 					
 #define MIDI_NOTE_ON       0x90
