@@ -14,6 +14,8 @@
 #define MIDI_ERROR               0x77
 #define MIDI_ITER_PER_MS         0x76
 
+#define MIDI_RTC                 0x20   // potentially allowing 5 bits of additional time data, if desired
+
 #define MIDI_MAX_ADC_VALUE       0x1F   // maximum value of the highest byte of the ADC. Make sure all other MIDI constants
                                         // here are higher than this, otherwise ambiguity in packets meaning will arise.
 					// See VERY IMPORTANT comment in the C code to see how it works.
