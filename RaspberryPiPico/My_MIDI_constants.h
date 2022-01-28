@@ -14,9 +14,9 @@
 #define MIDI_ERROR               0x77
 #define MIDI_ITER_PER_MS         0x40
 
-#define MIDI_MAX_ADC_VALUE       0x31   // maximum value of the highest byte of the ADC. Make sure all other MIDI constants
+#define MIDI_MAX_ADC_VALUE       0x1F   // maximum value of the highest byte of the ADC. Make sure all other MIDI constants
                                         // here are higher than this, otherwise ambiguity in packets meaning will arise.
 					// See VERY IMPORTANT comment in the C code to see how it works.
-
+					
 #define MIDI_NOTE_ON       0x90
 #define MIDI_NOTE_OFF      0x80
