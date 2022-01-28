@@ -408,6 +408,7 @@ void dump_note_adc(uint8_t my_note) {
       packet[1] = MIDI_VENDOR;
       packet[2] = 0x7F & (distance[my_note] >> 7);    // highest bits, since the ADC is 12 bit, max here is binary 1 1111
                                                       // aka decimal 31 or 0x1F -- VERY IMPORTANT
+      packet[3] = 0x7F & distance[my_note];           // lowest  7 bits
                                                       // if more than 14 bits, we need another byte
       packet[4] = midi_note_id;  // already 7 bits
       packet[5] = MIDI_END_SYSEX;
