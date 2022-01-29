@@ -73,7 +73,7 @@ static float VEL_CONST[N_ADC];
 static float VEL_SLOPE[N_ADC];
 
 static volatile uint32_t blink_interval_ms = BLINK_NOT_MOUNTED;
-static uint32_t calibration_ms = 500;
+static uint32_t calibration_ms = 50;
 
 void count_loop_iterations(void);
 void led_blinking_task(void);
@@ -423,6 +423,7 @@ void dump_note_adc(uint8_t my_note) {
       }
     }
     if (board_millis() - last_sent_ms > calibration_ms) {
+      last_sent_ms = board_millis();
       for (int i=0; i<N_ADC; i++) {  // needs to read all of them even if sending one only
         distance[i] = adc_read();
       }
