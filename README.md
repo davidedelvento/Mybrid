@@ -1,5 +1,8 @@
 # Mybrid
 
+[![See it in action](vimeo.jpg)](https://vimeo.com/669038601 "See it in action - Click to Watch!")
+
+
 ### About
 
 This repository is a collaborative space for the exploration of options to design and build the possible best
