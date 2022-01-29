@@ -226,7 +226,7 @@ static void inline sysex_enqueue(uint8_t *packet) {
 }
 #endif
 
-#define STATS_EVERY 5000 // measure/report average iterations and roundtrips every 5 seconds
+#define STATS_EVERY 5000 * 1000 // measure/report average iterations and roundtrips every 5 seconds
 
 // this runs on core1
 void i2c_listener() {
@@ -286,7 +286,7 @@ void i2c_listener() {
   while(true) {
 #ifdef MIDI_CONTROLLER
     current_time = get_absolute_time();
-    if (absolute_time_diff_us(time_when_sent, current_time) >= STATS_EVERY * 1000 && received){
+    if (absolute_time_diff_us(time_when_sent, current_time) >= STATS_EVERY && received){
       packet[0] = MIDI_SYS_EX;
       packet[1] = MIDI_VENDOR;
       packet[2] = MIDI_ROUNDTRIP_TIME_uS;
@@ -605,16 +605,15 @@ void led_blinking_task(void) {
 
 void count_loop_iterations() {
   static uint64_t loop_iterations = 0;
-  static uint32_t last_stats_time_ms = 0;
-//absolute_time_t last_stats_time = get_absolute_time();
+  static absolute_time_t last_stats_time;
+  if (!last_stats_time) {
+    last_stats_time = get_absolute_time();
+  }
   loop_iterations ++;
 
-  uint32_t current_time = board_millis();
-  //absolute_time_t current_time = get_absolute_time();
-  if (current_time - last_stats_time_ms >= STATS_EVERY) {
-  //if (absolute_time_diff_us(last_stats_time, current_time) >= STATS_EVERY){
-    last_stats_time_ms = current_time;
-    //last_stats_time = current_time;
+  absolute_time_t current_time = get_absolute_time();
+  if (absolute_time_diff_us(last_stats_time, current_time) >= STATS_EVERY){
+    last_stats_time = current_time;
     uint8_t packet[SYSEX_PKG_LEN];
     packet[0] = MIDI_SYS_EX;
     packet[1] = MIDI_VENDOR;
