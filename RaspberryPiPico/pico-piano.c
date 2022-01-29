@@ -196,16 +196,6 @@ void send_some_junk() {
       sleep_ms(10);
     }
 }
-#elif defined WORKER
-static void inline sysex_enqueue(uint8_t *packet) {
-  if (!queue_is_full(&sysex_buffer)) {
-    uint8_t copy[SYSEX_PKG_LEN];           // needs to preserve the content even if
-    for (int i=0; i<SYSEX_PKG_LEN; i++) {  // original is overwritten
-      copy[i] = packet[i];
-    }
-    queue_add_blocking(&sysex_buffer, copy);
-  } // else { // TODO send "too many requests" error
-}
 #endif
 
 void inline send(const uint8_t *src) {
@@ -215,6 +205,26 @@ void inline send(const uint8_t *src) {
 static void inline receive(uint8_t *src) {
   i2c_read_raw_blocking(i2c1, src, SYSEX_PKG_LEN);
 }
+
+#ifdef WORKER
+static void inline sysex_enqueue(uint8_t *packet) {
+  if (!queue_is_full(&sysex_buffer)) {
+    uint8_t copy[SYSEX_PKG_LEN];           // needs to preserve the content even if
+    for (int i=0; i<SYSEX_PKG_LEN; i++) {  // original is overwritten
+      copy[i] = packet[i];
+    }
+    queue_add_blocking(&sysex_buffer, copy);
+  } else {
+    packet[0] = MIDI_SYS_EX;
+    packet[1] = MIDI_VENDOR;
+    packet[2] = MIDI_ERROR;
+    packet[3] = TOO_MANY_PACKETS;
+    packet[4] = 0x66;
+    packet[5] = MIDI_END_SYSEX;
+    send(packet);
+  }
+}
+#endif
 
 #define STATS_EVERY 5000 // measure/report average iterations and roundtrips every 5 seconds
 

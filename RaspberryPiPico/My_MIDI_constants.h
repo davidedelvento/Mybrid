@@ -15,6 +15,7 @@
 #define MIDI_ERROR               0x77
 #define TOO_MANY_PICOS           0x07   // only used as a field of MIDI_ERROR, no limitations other than using only 7 bits
 #define EXPECTING_INIT           0x17
+#define TOO_MANY_PACKETS         0x27
 
 #define MIDI_ITER_PER_MS         0x76
 
