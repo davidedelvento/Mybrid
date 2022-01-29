@@ -13,12 +13,14 @@ args = parser.parse_args()
 defined = CDefine('../RaspberryPiPico/My_MIDI_constants.h')
 
 def load_data():
+    i = 0
     for msg in MidiFile(args.filename).play():
         if msg.type == 'sysex':
             if (msg.data[0] == defined.MIDI_VENDOR and
                 msg.data[1] <= defined.MIDI_MAX_ADC_VALUE):
 
-                yield msg.data[2] + msg.data[1] * 128
+                i = i + 1
+                yield i, msg.data[2] + msg.data[1] * 128
 
 if not args.dump:
     import matplotlib.pyplot as plt      # importing here to allow saving without GTK
@@ -26,7 +28,7 @@ if not args.dump:
     y = []
     i = 0
 
-    for xi, yi in enumerate(load_data()):
+    for xi, yi in load_data():
         x.append(xi)
         y.append(yi)
 
