@@ -593,11 +593,18 @@ void midi_in_task(void) {
 }
 
 void led_blinking_task(void) {
-  static uint32_t start_ms = 0;
   static bool led_state = false;
+  static absolute_time_t last_blink_time;
+  if (!last_blink_time) {
+    last_blink_time = get_absolute_time();
+  }
 
-  if ( board_millis() - start_ms < blink_interval_ms) return; // not enough time
-  start_ms += blink_interval_ms;
+  absolute_time_t current = get_absolute_time();
+  if (absolute_time_diff_us(last_blink_time, current)
+		  < blink_interval_ms * 1000) {
+    return; // not enough time
+  }
+  last_blink_time = current;
 
   gpio_put(PICO_DEFAULT_LED_PIN, led_state);
   led_state = 1 - led_state; // toggle
