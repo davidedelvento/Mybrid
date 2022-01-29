@@ -6,56 +6,34 @@ from mido import Message, MidiFile, MidiTrack
 from cdefine import CDefine
 
 parser = argparse.ArgumentParser()
-parser.add_argument("-s", "--save", help="Save data in a file named <SAVE> for later plotting")
-parser.add_argument("-l", "--load", help="Load data in a file named <LOAD> for immediate plotting")
-parser.add_argument("-v", "--verbose", action="store_true")
+parser.add_argument("filename", help="Load <FILENAME> for immediate plotting or text file dumping")
+parser.add_argument("--dump", help="Dump the content of FILENAME on the terminal", action="store_true")
 args = parser.parse_args()
-
-if ((args.save is     None and args.load is     None) or
-    (args.save is not None and args.load is not None)):
-    parser.error("Must select either --save or --load")
 
 defined = CDefine('../RaspberryPiPico/My_MIDI_constants.h')
 
-if args.load:
+def load_data():
+    for msg in MidiFile(args.filename).play():
+        if msg.type == 'sysex':
+            if (msg.data[0] == defined.MIDI_VENDOR and
+                msg.data[1] <= defined.MIDI_MAX_ADC_VALUE):
+
+                yield msg.data[2] + msg.data[1] * 128
+
+if not args.dump:
     import matplotlib.pyplot as plt      # importing here to allow saving without GTK
     x = []
     y = []
     i = 0
 
-    for msg in MidiFile(args.load).play():
-        if msg.type == 'sysex':
-            if (msg.data[0] == defined.MIDI_VENDOR and
-                msg.data[1] <= defined.MIDI_MAX_ADC_VALUE):
-
-                x.append(i)
-                i = i + 1
-                y.append(msg.data[2] + msg.data[1] * 128)
+    for xi, yi in enumerate(load_data()):
+        x.append(xi)
+        y.append(yi)
 
     fig, ax = plt.subplots()
     ax.plot(x,y)
     ax.set_ylim(0, 4096);
     plt.show()
-
-if args.save:
-    mid = MidiFile()
-    track = MidiTrack()
-    mid.tracks.append(track)
-
-    pico=mido.get_input_names()[1]
-    if args.verbose:
-        print("Trying to open", pico)
-
-    with mido.open_input(pico) as inport:
-        print(pico, "opened, waiting for messages, CTRL-C to stop and save")
-        try:
-            for msg in inport:
-                track.append(msg)
-                if args.verbose:
-                    print(msg)
-        except KeyboardInterrupt:
-            pass
-
-    mid.save(args.save)
-    print("")                 # overwritten by the CTRL-C
-    print(args.save, "saved")
+else:
+    for xi, yi in enumerate(load_data()):
+        print(xi, yi)
