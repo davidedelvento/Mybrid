@@ -73,7 +73,7 @@ static float VEL_CONST[N_ADC];
 static float VEL_SLOPE[N_ADC];
 
 static volatile uint32_t blink_interval_ms = BLINK_NOT_MOUNTED;
-static uint32_t calibration_ms = 1;
+static uint32_t calibration_us = 1000;
 
 void count_loop_iterations(void);
 void led_blinking_task(void);
@@ -404,10 +404,10 @@ void dump_note_adc(uint8_t my_note) {
   uint8_t packet[SYSEX_PKG_LEN];
   uint8_t midi_note_id = FIRST_NOTE + my_pico_id * N_ADC + my_note;
   uint16_t distance[N_ADC];
-  uint32_t last_sent_ms = 0;
-  int64_t current_time = 0;
-  absolute_time_t start_time;
+  int64_t us_time = 0;
+  absolute_time_t start_time, current_time, last_sent_time;
   start_time = get_absolute_time();
+  last_sent_time = start_time;
 
   blink_interval_ms = BLINK_FAST;
 
@@ -425,21 +425,23 @@ void dump_note_adc(uint8_t my_note) {
 	}
       }
     }
-    if (board_millis() - last_sent_ms > calibration_ms) {
-      last_sent_ms = board_millis();
+
+    current_time = get_absolute_time();
+    if (absolute_time_diff_us(last_sent_time, current_time) > calibration_us) {
+      last_sent_time = current_time;
       for (int i=0; i<N_ADC; i++) {  // needs to read all of them even if sending one only
 	if (i == my_note) {
-	  current_time = absolute_time_diff_us(start_time, get_absolute_time());
+	  us_time = absolute_time_diff_us(start_time, get_absolute_time());
 	}
         distance[i] = adc_read();    // this should take 2us, 400x the default RPiPico clock tick of 8ns
       }
-      // reduce precision of current_time from int64_t, i.e. 64 bits to 14 bit -- it's going to wrap, no big deal
-      current_time = current_time % 16383;
+      // reduce precision of us_time from int64_t, i.e. 64 bits to 14 bit -- it's going to wrap, no big deal
+      us_time = us_time % 16383;
       packet[0] = MIDI_SYS_EX;
       packet[1] = MIDI_VENDOR;
       packet[2] = MIDI_RTC;
-      packet[3] = current_time >> 7;
-      packet[4] = 0x7F & current_time;
+      packet[3] = us_time >> 7;
+      packet[4] = 0x7F & us_time;
       packet[5] = MIDI_END_SYSEX;
 #ifdef WORKER
       send(packet);
