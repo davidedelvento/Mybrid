@@ -15,12 +15,13 @@ defined = CDefine('../RaspberryPiPico/My_MIDI_constants.h')
 def load_data():
     i = 0
     for msg in MidiFile(args.filename).play():
-        if msg.type == 'sysex':
-            if (msg.data[0] == defined.MIDI_VENDOR and
-                msg.data[1] <= defined.MIDI_MAX_ADC_VALUE):
+        if (msg.type == 'sysex' and
+            msg.data[0] == defined.MIDI_VENDOR):
 
-                i = i + 1
-                yield i, msg.data[2] + msg.data[1] * 128
+                if msg.data[1] <= defined.MIDI_MAX_ADC_VALUE:
+                    yield i, msg.data[2] + msg.data[1] * 128
+                elif msg.data[1] == defined.MIDI_RTC:
+                    i = msg.data[2] + msg.data[1] * 128
 
 if not args.dump:
     import matplotlib.pyplot as plt      # importing here to allow saving without GTK
