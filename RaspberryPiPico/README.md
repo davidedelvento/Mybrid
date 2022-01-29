@@ -17,7 +17,7 @@ platform, I wrote some quite decent code for it and added the following
 
 ### Current Status
 As stated above, I purchased the Raspberry Pi Pico as test platform for sensors. In fact, it its current form, this software almost makes it
-to the point of the latter. For example, the code not only supports daisy-chaining up to 60 boards: it automatically discovers the number
+to the point of the latter. For example, the code not only supports daisy-chaining up to 128 boards: it automatically discovers the number
 of connected boards and correctly operates all of them! You need to connect only the main Pico to a computer, and it presents itself as
 a single MIDI instrument. Via MIDI, it sends SYS_EX messages regarding its internal performance and status. You
 can control a number of internal settings via MIDI too: just send SYS_EX commands: no need to recompile. By no means it's a complete

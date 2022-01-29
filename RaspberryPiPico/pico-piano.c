@@ -228,7 +228,7 @@ void i2c_listener() {
   packet[1] = MIDI_VENDOR;
   packet[2] = INIT_PICO;
   packet[3] = 0x00;
-  packet[4] = 0x77;
+  packet[4] = 0x00;
   packet[5] = MIDI_END_SYSEX;
   send(packet);
 #endif
@@ -240,26 +240,38 @@ void i2c_listener() {
 
 #ifdef WORKER
     my_pico_id = ++packet[3];
-    have_been_init = true;
+    if (my_pico_id < 128) {
+      have_been_init = true;
+    } else { // because of MIDI limitations, can't use 8 bits as pico_id
+	     // hence cannot relay the init packet anymore
+      packet[0] = MIDI_SYS_EX;
+      packet[1] = MIDI_VENDOR;
+      packet[2] = MIDI_ERROR;
+      packet[3] = TOO_MANY_PICOS;
+      packet[4] = 0x66;
+      packet[5] = MIDI_END_SYSEX;
+    }
     send(packet);
 #elif defined MIDI_CONTROLLER
-    n_pico = ++packet[3]; // TODO bail out if more than possible (127? TBC)
+    n_pico = packet[3] + 1;
     tud_midi_stream_write(0, packet, SYSEX_PKG_LEN);  // let the computer know
 #endif
 
   }
-#ifdef WORKER
   else {                      // gotten an non-init packet, should never happen
-    send(packet);             // rely whatever the packet was and send an error
+#ifdef WORKER
+    send(packet);             // relay whatever the packet was and send an error
     packet[0] = MIDI_SYS_EX;
     packet[1] = MIDI_VENDOR;
     packet[2] = MIDI_ERROR;
-    packet[3] = 0x66;
+    packet[3] = EXPECTING_INIT;
     packet[4] = 0x66;
     packet[5] = MIDI_END_SYSEX;
     send(packet);
-  }                           // TODO should also continue waiting for the missing init packet?
+#elif defined MIDI_CONTROLLER
+    tud_midi_stream_write(0, packet, SYSEX_PKG_LEN);  // let the computer know
 #endif
+  }
 
   while(true) {
 #ifdef MIDI_CONTROLLER
