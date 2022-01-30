@@ -3,6 +3,7 @@
 import argparse, mido, bz2
 from mido import Message, MidiFile, MidiTrack
 from cdefine import CDefine
+import mytechnician
 
 parser = argparse.ArgumentParser()
 parser.add_argument("filename", help="Load <FILENAME> for immediate plotting or text file dumping")
@@ -11,6 +12,7 @@ parser.add_argument("-i", "--ignore-midi-time", help="Use the ADC values sequent
 args = parser.parse_args()
 
 defined = CDefine('../RaspberryPiPico/My_MIDI_constants.h')
+mt = mytechnician.mt()
 
 def load_data():
     x = 0
@@ -20,6 +22,8 @@ def load_data():
 
                 if msg.data[1] <= defined.MIDI_MAX_ADC_VALUE:
                     yield x, msg.data[2] + msg.data[1] * 128
+                else:
+                    mt.pretty_print(msg.data, exclude=['MIDI_MAX_ADC_VALUE', 'MIDI_RTC'])
 
                 if args.ignore_midi_time:
                     x = x + 1

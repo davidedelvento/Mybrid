@@ -4,13 +4,33 @@ import mido
 from mido import Message, MidiFile, MidiTrack
 from cdefine import CDefine
 
-import threading, time, blessed
+import threading, time, blessed, sys
 
 pico_in  = mido.get_input_names()[1]
 pico_out = mido.get_output_names()[1]
 defined = CDefine('../RaspberryPiPico/My_MIDI_constants.h')
 
+midi_strings = defined.__dict__
+midi_values = {}
+for k in defined.__dict__.keys():
+    value = defined.__dict__[k]
+    if value in midi_values:
+        print("Warning, duplicated value", value, "for", midi_values[value], "and", k, file=sys.stderr)
+    midi_values[defined.__dict__[k]] = k
+
+
 class mt:
+    def pretty_print(self, data, exclude=[]):
+        my_midi_strings = list(midi_strings.keys())
+        for e in exclude:
+            my_midi_strings.remove(e)
+
+        if data[1] in midi_values:
+            if midi_values[data[1]] in my_midi_strings:
+                print(midi_values[data[1]], data[2], data[3])
+        else:
+            print(data[1], data[2], data[3])
+
     def _print_info(self):
         print("Run `mt.save_captured(file)` to stop capturing and save.")
         print("Run `mt.abort_capture()` to stop capturing.")
@@ -19,7 +39,7 @@ class mt:
         self.th = None
         self.t = blessed.Terminal()
         self.outport = mido.open_output(pico_out)
-        print("Opened", pico_out, "for output")
+        print("Opened", pico_out, "for output", file=sys.stderr)
         self.must_stop = True
         self.mid = None
         self.track = None
@@ -30,7 +50,7 @@ class mt:
 
     def _capture(self, pico):
         with mido.open_input(pico) as inport:
-            print(pico, "opened, collecting messages.")
+            print(pico, "opened, collecting messages.", file=sys.stderr)
             self._print_info()
             last_time = 0
             options = ["|", "/", "-", "\\"]
