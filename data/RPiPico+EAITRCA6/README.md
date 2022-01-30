@@ -7,6 +7,6 @@ to various issues, most notably [this one](https://github.com/SpotlightKid/pytho
 still unable to capture the full temporal resolution of the RPiPico's ADC, as described
 [here](https://raspberrypi.stackexchange.com/questions/135890/full-speed-of-pico-adc-faster-than-usb-how-to-capture-spi-compression)
 
-To analyze these files this [tool](https://github.com/davidedelvento/Mybrid/blob/main/MyTechnician/plot_midi.py) can be used.
+To analyze these files this [tool](https://github.com/davidedelvento/Mybrid/blob/main/MyTechnician/) can be used.
 
 ![Plot](http://i.imgur.com/njksiwA.png)
