@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
-import argparse
-import mido
+import argparse, mido, bz2
 from mido import Message, MidiFile, MidiTrack
 from cdefine import CDefine
 
@@ -15,7 +14,7 @@ defined = CDefine('../RaspberryPiPico/My_MIDI_constants.h')
 
 def load_data():
     x = 0
-    for msg in MidiFile(args.filename).play():
+    for msg in MidiFile(file=bz2.open(args.filename, 'rb')).play():
         if (msg.type == 'sysex' and
             msg.data[0] == defined.MIDI_VENDOR):
 
