@@ -9,6 +9,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument("filename", help="Load <FILENAME> for immediate plotting or text file dumping")
 parser.add_argument("--dump", help="Dump the content of FILENAME on the terminal", action="store_true")
 parser.add_argument("-i", "--ignore-midi-time", help="Use the ADC values sequentially, disregarding MIDI time packets", action="store_true")
+parser.add_argument("-s", "--silent", help="Do not report housekeeping messages", action="store_true")
 args = parser.parse_args()
 
 defined = CDefine('../RaspberryPiPico/My_MIDI_constants.h')
@@ -22,7 +23,7 @@ def load_data():
 
                 if msg.data[1] <= defined.MIDI_MAX_ADC_VALUE:
                     yield x, msg.data[2] + msg.data[1] * 128
-                else:
+                elif not args.silent:
                     mt.pretty_print(msg.data, exclude=['MIDI_MAX_ADC_VALUE', 'MIDI_RTC'])
 
                 if args.ignore_midi_time:
