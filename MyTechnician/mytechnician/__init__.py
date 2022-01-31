@@ -32,6 +32,7 @@ class mt:
         n_rtc_packets = 0
         iter_per_ms = [0, 0, 0]
         n_iter_per_ms = [0, 0, 0]
+        n_overflow_iter_per_ms = [0, 0, 0]
         exclude = []
         roundtrip_time = 0
         n_roundtrip_time = 0
@@ -51,6 +52,9 @@ class mt:
                     elif msg.data[1] == defined.MIDI_ITER_PER_MS:
                         if msg.data[2] == msg.data[3] and msg.data[2] == 127:
                             n_junk_packets += 1
+                            continue
+                        if msg.data[3] == 127:
+                            n_overflow_iter_per_ms[msg.data[2]] += 1
                             continue
                         iter_per_ms[msg.data[2]] += msg.data[3]
                         n_iter_per_ms[msg.data[2]] += 1
@@ -84,9 +88,11 @@ class mt:
         print("Number of ADC dump packets", n_adc_packets)
         print("Number of MIDI_RTC packets", n_rtc_packets)
         print("Number of startup  packets", n_junk_packets)
-        for i,it in enumerate(iter_per_ms):
-            avg = self._zero_avg(it, n_iter_per_ms[i])
-            print("Average of ITER_PER_MS for pico #", i, "is", avg, "(over", n_iter_per_ms[i], "messages)")
+        for pico,it in enumerate(iter_per_ms):
+            avg = self._zero_avg(it, n_iter_per_ms[pico])
+            print("Average of ITER_PER_MS for pico #", pico, "is", avg, "(over", n_iter_per_ms[pico], "messages)")
+        for i,over in enumerate(n_overflow_iter_per_ms):
+            print("Number of overflow ITER_PER_MS packets for pico #", i, "is", over)
         avg = self._zero_avg(roundtrip_time, n_roundtrip_time)
         print("Average MIDI_ROUNDTRIP_TIME_uS", avg, "(over", n_roundtrip_time, "messages)")
 
