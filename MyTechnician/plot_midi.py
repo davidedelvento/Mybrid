@@ -22,7 +22,7 @@ def load_data():
             msg.data[0] == defined.MIDI_VENDOR):
 
                 if msg.data[1] <= defined.MIDI_MAX_ADC_VALUE:
-                    yield x, msg.data[2] + msg.data[1] * 128
+                    yield x, msg.data[2] + msg.data[1] * 128, msg.data[3]
                 elif not args.silent:
                     mt.pretty_print(msg.data, exclude=['MIDI_MAX_ADC_VALUE', 'MIDI_RTC'])
 
@@ -39,14 +39,22 @@ if not args.dump:
     x = []
     y = []
     i = 0
-
-    for xi, yi in load_data():
-        x.append(xi)
-        y.append(yi)
+    first_note = False
+    for xi, yi, note in load_data():
+        if not first_note:
+            first_note = note
+        if first_note == note:
+            x.append(xi)
+            y.append(yi)
+        else:
+            print("Ignoring note", note)
 
     fig, ax = plt.subplots()
-    ax.plot(x,y)
+    ax.plot(x,y, label="MIDI note " + str(note))
     ax.set_ylim(0, 4096);
+    ax.set_xlabel('time (s)')
+    ax.set_ylabel('Raw ADC value')
+    ax.legend()
     plt.show()
 else:
     print("Time (s)  ADC_value")
