@@ -4,7 +4,7 @@ import mido
 from mido import Message, MidiFile, MidiTrack
 from cdefine import CDefine
 
-import threading, time, blessed, sys
+import threading, time, blessed, sys, bz2
 
 pico_in  = mido.get_input_names()[1]
 pico_out = mido.get_output_names()[1]
@@ -20,6 +20,58 @@ for k in defined.__dict__.keys():
 
 
 class mt:
+    def parse_stats(self, filename):
+        n_adc_packets = 0
+        n_rtc_packets = 0
+        iter_per_ms = [0, 0, 0]
+        n_iter_per_ms = [0, 0, 0]
+        exclude = []
+        roundtrip_time = 0
+        n_roundtrip_time = 0
+        print()
+        for msg in MidiFile(file=bz2.open(filename, 'rb')).play():
+            if msg.type != 'sysex':
+                print("Not dealing with", msg.type)
+                continue
+            if msg.data[0] != defined.MIDI_VENDOR:
+                print("Probable message corruption", msg)
+                continue
+            if msg.data[1] > defined.MIDI_MAX_ADC_VALUE:
+                if msg.data[1] == defined.MIDI_RTC:
+                    n_rtc_packets += 1
+                    exclude.append('MIDI_RTC')
+                elif msg.data[1] == defined.MIDI_ITER_PER_MS:
+                    iter_per_ms[msg.data[2]] += msg.data[3]
+                    n_iter_per_ms[msg.data[2]] += 1
+                    exclude.append('MIDI_ITER_PER_MS')
+                elif msg.data[1] == defined.MIDI_ROUNDTRIP_TIME_uS:
+                    roundtrip_time += msg.data[2] * 128 + msg.data[3]
+                    n_roundtrip_time += 1
+                    exclude.append('MIDI_ROUNDTRIP_TIME_uS')
+#MIDI_DUMP_NOTE_ADC
+#MIDI_STOP_DUMP_ADC
+#MIDI_REGULATE
+#MIDI_CONTINUE_REGULATION
+#MIDI_DUMP_REGULATION
+#INIT_PICO
+#MIDI_NO_SUCH_NOTE
+#MIDI_ERROR
+#  TOO_MANY_PICOS
+#  EXPECTING_INIT
+#  TOO_MANY_PACKETS
+                else:
+                    print("Not counting ", end="")
+                    self.pretty_print(msg.data, exclude=[])
+            else:
+                n_adc_packets += 1 # TODO should count different notes separately
+
+        print()
+        print("Number of ADC dump packets", n_adc_packets)
+        print("Number of MIDI_RTC packets", n_rtc_packets)
+        for i,it in enumerate(iter_per_ms):
+            print("Average of ITER_PER_MS for pico #", i, "is", it/n_iter_per_ms[i], "(over", n_iter_per_ms[i], "messages)")
+        print("Average MIDI_ROUNDTRIP_TIME_uS", roundtrip_time / n_roundtrip_time, "(over", n_roundtrip_time, "messages)")
+
     def pretty_print(self, data, exclude=[]):
         my_midi_strings = list(midi_strings.keys())
         for e in exclude:
