@@ -20,6 +20,12 @@ for k in defined.__dict__.keys():
 
 
 class mt:
+    def _zero_avg(self, num, den):
+        if den > 0:
+            return num/den
+        else:
+            return 0
+
     def parse_stats(self, filename):
         n_adc_packets = 0
         n_rtc_packets = 0
@@ -33,21 +39,22 @@ class mt:
             if msg.type != 'sysex':
                 print("Not dealing with", msg.type)
                 continue
-            if msg.data[0] != defined.MIDI_VENDOR:
-                print("Probable message corruption", msg)
-                continue
-            if msg.data[1] > defined.MIDI_MAX_ADC_VALUE:
-                if msg.data[1] == defined.MIDI_RTC:
-                    n_rtc_packets += 1
-                    exclude.append('MIDI_RTC')
-                elif msg.data[1] == defined.MIDI_ITER_PER_MS:
-                    iter_per_ms[msg.data[2]] += msg.data[3]
-                    n_iter_per_ms[msg.data[2]] += 1
-                    exclude.append('MIDI_ITER_PER_MS')
-                elif msg.data[1] == defined.MIDI_ROUNDTRIP_TIME_uS:
-                    roundtrip_time += msg.data[2] * 128 + msg.data[3]
-                    n_roundtrip_time += 1
-                    exclude.append('MIDI_ROUNDTRIP_TIME_uS')
+            try:
+                if msg.data[0] != defined.MIDI_VENDOR:
+                    print("Probable message corruption", msg)
+                    continue
+                if msg.data[1] > defined.MIDI_MAX_ADC_VALUE:
+                    if msg.data[1] == defined.MIDI_RTC:
+                        n_rtc_packets += 1
+                        exclude.append('MIDI_RTC')
+                    elif msg.data[1] == defined.MIDI_ITER_PER_MS:
+                        iter_per_ms[msg.data[2]] += msg.data[3]
+                        n_iter_per_ms[msg.data[2]] += 1
+                        exclude.append('MIDI_ITER_PER_MS')
+                    elif msg.data[1] == defined.MIDI_ROUNDTRIP_TIME_uS:
+                        roundtrip_time += msg.data[2] * 128 + msg.data[3]
+                        n_roundtrip_time += 1
+                        exclude.append('MIDI_ROUNDTRIP_TIME_uS')
 #MIDI_DUMP_NOTE_ADC
 #MIDI_STOP_DUMP_ADC
 #MIDI_REGULATE
@@ -59,18 +66,24 @@ class mt:
 #  TOO_MANY_PICOS
 #  EXPECTING_INIT
 #  TOO_MANY_PACKETS
+                    else:
+                        print("Not counting ", end="")
+                        self.pretty_print(msg.data, exclude=[])
                 else:
-                    print("Not counting ", end="")
-                    self.pretty_print(msg.data, exclude=[])
-            else:
-                n_adc_packets += 1 # TODO should count different notes separately
+                    n_adc_packets += 1 # TODO should count different notes separately
+            except IndexError:
+                print("Corrupted packet ", end="")
+                self.pretty_print(msg.data, exclude=[])
+
 
         print()
         print("Number of ADC dump packets", n_adc_packets)
         print("Number of MIDI_RTC packets", n_rtc_packets)
         for i,it in enumerate(iter_per_ms):
-            print("Average of ITER_PER_MS for pico #", i, "is", it/n_iter_per_ms[i], "(over", n_iter_per_ms[i], "messages)")
-        print("Average MIDI_ROUNDTRIP_TIME_uS", roundtrip_time / n_roundtrip_time, "(over", n_roundtrip_time, "messages)")
+            avg = self._zero_avg(it, n_iter_per_ms[i])
+            print("Average of ITER_PER_MS for pico #", i, "is", avg, "(over", n_iter_per_ms[i], "messages)")
+        avg = self._zero_avg(roundtrip_time, n_roundtrip_time)
+        print("Average MIDI_ROUNDTRIP_TIME_uS", avg, "(over", n_roundtrip_time, "messages)")
 
     def pretty_print(self, data, exclude=[]):
         my_midi_strings = list(midi_strings.keys())
