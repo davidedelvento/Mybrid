@@ -28,6 +28,7 @@ class mt:
 
     def parse_stats(self, filename):
         n_adc_packets = 0
+        n_junk_packets = 0
         n_rtc_packets = 0
         iter_per_ms = [0, 0, 0]
         n_iter_per_ms = [0, 0, 0]
@@ -48,6 +49,9 @@ class mt:
                         n_rtc_packets += 1
                         exclude.append('MIDI_RTC')
                     elif msg.data[1] == defined.MIDI_ITER_PER_MS:
+                        if msg.data[2] == msg.data[3] and msg.data[2] == 127:
+                            n_junk_packets += 1
+                            continue
                         iter_per_ms[msg.data[2]] += msg.data[3]
                         n_iter_per_ms[msg.data[2]] += 1
                         exclude.append('MIDI_ITER_PER_MS')
@@ -79,6 +83,7 @@ class mt:
         print()
         print("Number of ADC dump packets", n_adc_packets)
         print("Number of MIDI_RTC packets", n_rtc_packets)
+        print("Number of startup  packets", n_junk_packets)
         for i,it in enumerate(iter_per_ms):
             avg = self._zero_avg(it, n_iter_per_ms[i])
             print("Average of ITER_PER_MS for pico #", i, "is", avg, "(over", n_iter_per_ms[i], "messages)")
