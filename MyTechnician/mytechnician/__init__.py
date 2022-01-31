@@ -5,6 +5,7 @@ from mido import Message, MidiFile, MidiTrack
 from cdefine import CDefine
 
 import threading, time, blessed, sys, bz2
+from collections import defaultdict
 
 pico_in  = mido.get_input_names()[1]
 pico_out = mido.get_output_names()[1]
@@ -36,8 +37,20 @@ class mt:
         exclude = []
         roundtrip_time = 0
         n_roundtrip_time = 0
+        notes_on = defaultdict(lambda: 0)
+        velocities_on = defaultdict(lambda: 0)
+        notes_off = defaultdict(lambda: 0)
+        velocities_off = defaultdict(lambda: 0)
         print()
         for msg in MidiFile(file=bz2.open(filename, 'rb')).play():
+            if msg.type == 'note_on':
+                notes_on[msg.note] += 1
+                velocities_on[msg.note] += msg.velocity
+                continue
+            if msg.type == 'note_off':
+                notes_off[msg.note] += 1
+                velocities_off[msg.note] += msg.velocity
+                continue
             if msg.type != 'sysex':
                 print("Not dealing with", msg.type)
                 continue
@@ -63,8 +76,6 @@ class mt:
                         roundtrip_time += msg.data[2] * 128 + msg.data[3]
                         n_roundtrip_time += 1
                         exclude.append('MIDI_ROUNDTRIP_TIME_uS')
-#MIDI_DUMP_NOTE_ADC
-#MIDI_STOP_DUMP_ADC
 #MIDI_REGULATE
 #MIDI_CONTINUE_REGULATION
 #MIDI_DUMP_REGULATION
@@ -95,6 +106,14 @@ class mt:
             print("Number of overflow ITER_PER_MS packets for pico #", i, "is", over)
         avg = self._zero_avg(roundtrip_time, n_roundtrip_time)
         print("Average MIDI_ROUNDTRIP_TIME_uS", avg, "(over", n_roundtrip_time, "messages)")
+        print("NOTE_ON", dict(notes_on))
+        for v in velocities_on:
+            velocities_on[v] /= notes_on[v]
+        print("VELOCITY_ON", dict(velocities_on))
+        print("NOTE_OFF", dict(notes_off))
+        for v in velocities_off:
+            velocities_off[v] /= notes_off[v]
+        print("VELOCITY_OFF", dict(velocities_off))
 
     def pretty_print(self, data, exclude=[]):
         my_midi_strings = list(midi_strings.keys())
