@@ -36,4 +36,18 @@ if args.bits_12:
             print(i, time[-1], data[-2], "", data[-1], sep="\t")
 
 else:
-    print("not ready")
+    data1 = []
+    data2 = []
+    data3 = []
+    time = []
+
+    print("Count\ttime\tadc1\tadc2\tadc3")
+    with open(args.filename, mode='rb') as file:
+        b = file.read()
+        for i in range(0, len(b), 4):
+            data1.append(b[i])
+            data2.append(b[i+1])
+            data3.append(b[i+2])
+            time.append(b[i+3])
+            print(i, time[-1], data1[-1], data2[-1], data3[-1], sep="\t")
+
