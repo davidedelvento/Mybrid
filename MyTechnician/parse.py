@@ -3,7 +3,7 @@
 import argparse
 import mytechnician
 
-parser = argparse.ArgumentParser()
+parser = argparse.ArgumentParser(description="Parser of ADC data contained as SYSEX in MIDI files")
 parser.add_argument("filename", help="Load <FILENAME> for plotting, analysis or dumping in a text file")
 action = parser.add_mutually_exclusive_group(required=True)
 action.add_argument("-d", "--dump", help="Dump the content of FILENAME on the terminal", action="store_true")
