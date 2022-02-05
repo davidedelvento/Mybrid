@@ -21,6 +21,10 @@ def parse_2_12(b0, b1, b2):
     d1 = (b2 << 4) + ((b1 & 0xF0) >> 4)
     return d1, d2
 
+if args.plot:
+    import matplotlib.pyplot as plt      # importing here to allow saving without GTK
+    import numpy as np
+
 if args.bits_12:
     data = []
     time = []
@@ -38,7 +42,12 @@ if args.bits_12:
         for i in range(len(time)):
             print(time[i], data[2*i], "", data[2*i+1], sep="\t")
     else:
-        print("will plot")
+        fig, ax = plt.subplots()
+        ax.plot(time, data)
+        ax.set_ylim(0, 4096)
+        ax.set_xlabel('time (s)')
+        ax.set_ylabel('Raw ADC value')
+        plt.show()
 
 else:
     data1 = []
@@ -59,4 +68,12 @@ else:
         for i in range(len(time)):
             print(time[i], data1[i], data2[i], data3[i], sep="\t")
     else:
-        print("will plot")
+        fig, ax = plt.subplots()
+        ax.plot(time, data1, label="ADC1")
+        ax.plot(time, data2, label="ADC2")
+        ax.plot(time, data3, label="ADC3")
+        ax.set_ylim(0, 256)
+        ax.set_xlabel('time (s)')
+        ax.set_ylabel('Raw ADC value')
+        ax.legend()
+        plt.show()
