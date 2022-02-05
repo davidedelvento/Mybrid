@@ -13,6 +13,8 @@ args = parser.parse_args()
 data = []
 time = []
 
+print("Count\ttime\tadc_at_time\tadc_at_time_plus")
+
 with open(args.filename, mode='rb') as file:
     b = file.read()
     for i in range(0, len(b), 4):
@@ -21,5 +23,5 @@ with open(args.filename, mode='rb') as file:
         data.append(d1)
         data.append(d2)
         time.append(b[i+3])
-        print(i, time[-1], data[-2], data[-1], "-", b[i+2], b[i+1]&0xF0)
+        print(i, time[-1], data[-2], "", data[-1], sep="\t")
 
