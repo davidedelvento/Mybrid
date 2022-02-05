@@ -31,11 +31,16 @@ if args.bits_12:
 
     with open(args.filename, mode='rb') as file:
         b = file.read()
+        old_time = b[3]
         for i in range(0, len(b), 4):
             d1, d2 = parse_2_12(b[i], b[i+1], b[i+2])
             data.append(d1)
             data.append(d2)
-            time.append(b[i+3])
+            curr_time = b[i+3]
+            while (curr_time < old_time):
+                curr_time += 256
+            time.append(curr_time)
+            old_time = curr_time
 
     if args.dump:
         print("Time\tadc_at_time\tadc_at_time_plus")
@@ -45,7 +50,7 @@ if args.bits_12:
         fig, ax = plt.subplots()
         ax.plot(time, data)
         ax.set_ylim(0, 4096)
-        ax.set_xlabel('time (s)')
+        ax.set_xlabel('time (us)')
         ax.set_ylabel('Raw ADC value')
         plt.show()
 
