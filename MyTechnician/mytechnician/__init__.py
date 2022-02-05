@@ -4,10 +4,13 @@ import mido
 from mido import Message, MidiFile, MidiTrack
 from cdefine import CDefine
 
-import threading, time, sys, bz2
+import threading
+import time
+import sys
+import bz2
 from collections import defaultdict
 
-pico_in  = mido.get_input_names()[1]
+pico_in  = mido.get_input_names()[1]           # NOQA -- I like this indentation better
 pico_out = mido.get_output_names()[1]
 defined = CDefine('../RaspberryPiPico/My_MIDI_constants.h')
 
@@ -34,14 +37,13 @@ class mt:
         iter_per_ms = [0, 0, 0]
         n_iter_per_ms = [0, 0, 0]
         n_overflow_iter_per_ms = [0, 0, 0]
-        exclude = []  # TODO set, but why do we need this?
         roundtrip_time = 0
         n_roundtrip_time = 0
         notes_on = defaultdict(lambda: 0)
         velocities_on = defaultdict(lambda: 0)
         notes_off = defaultdict(lambda: 0)
         velocities_off = defaultdict(lambda: 0)
-        if not quiet: print()
+        if not quiet: print()                    # NOQA -- simple and clear enough
 
         for msg in MidiFile(file=bz2.open(filename, 'rb')).play():
             if msg.type == 'note_on':
@@ -61,12 +63,11 @@ class mt:
                     continue
                 if msg.data[1] > defined.MIDI_MAX_ADC_VALUE:
                     if msg.data[1] == defined.MIDI_RTC:
-                        curr_time = (msg.data[2] * 128 + msg.data[3]) / 1000000 # us
-                        old_time = rtc_packets[-1] if len(rtc_packets)>0 else 0
+                        curr_time = (msg.data[2] * 128 + msg.data[3]) / 1000000   # us
+                        old_time = rtc_packets[-1] if (len(rtc_packets) > 0) else 0
                         while (curr_time < old_time):
-                            curr_time += 16384 / 1000000 # us
+                            curr_time += 16384 / 1000000                          # us
                         rtc_packets.append(curr_time)
-                        exclude.append('MIDI_RTC')
                     elif msg.data[1] == defined.MIDI_ITER_PER_MS:
                         if msg.data[2] == msg.data[3] and msg.data[2] == 127:
                             n_junk_packets += 1
@@ -76,38 +77,36 @@ class mt:
                             continue
                         iter_per_ms[msg.data[2]] += msg.data[3]
                         n_iter_per_ms[msg.data[2]] += 1
-                        exclude.append('MIDI_ITER_PER_MS')
                     elif msg.data[1] == defined.MIDI_ROUNDTRIP_TIME_uS:
                         roundtrip_time += msg.data[2] * 128 + msg.data[3]
                         n_roundtrip_time += 1
-                        exclude.append('MIDI_ROUNDTRIP_TIME_uS')
-#MIDI_REGULATE
-#MIDI_CONTINUE_REGULATION
-#MIDI_DUMP_REGULATION
-#INIT_PICO
-#MIDI_NO_SUCH_NOTE
-#MIDI_ERROR
-#  TOO_MANY_PICOS
-#  EXPECTING_INIT
-#  TOO_MANY_PACKETS
+# MIDI_REGULATE
+# MIDI_CONTINUE_REGULATION
+# MIDI_DUMP_REGULATION
+# INIT_PICO
+# MIDI_NO_SUCH_NOTE
+# MIDI_ERROR
+#   TOO_MANY_PICOS
+#   EXPECTING_INIT
+#   TOO_MANY_PACKETS
                     else:
                         print("Warning, not counting ", end="", file=sys.stderr)
-                        self.pretty_print(msg.data, exclude=[], target=sys.stderr)
+                        self.pretty_print(msg.data, target=sys.stderr)
                 else:
                     adc_packets[msg.data[3]].append(msg.data[1] * 128 + msg.data[2])
             except IndexError:
                 print("Warning, corrupted packet ", end="", file=sys.stderr)
-                self.pretty_print(msg.data, exclude=[], target=sys.stderr)
+                self.pretty_print(msg.data, target=sys.stderr)
 
         if not quiet:
             print()
             print("Number of ADC dump packets", sum([len(adc_packets[i]) for i in adc_packets]))
             print("Number of MIDI_RTC packets", len(rtc_packets))
             print("Number of startup  packets", n_junk_packets)
-            for pico,it in enumerate(iter_per_ms):
+            for (pico, it) in enumerate(iter_per_ms):
                 avg = self._zero_avg(it, n_iter_per_ms[pico])
                 print("Average of ITER_PER_MS for pico #", pico, "is", avg, "(over", n_iter_per_ms[pico], "messages)")
-            for i,over in enumerate(n_overflow_iter_per_ms):
+            for (i, over) in enumerate(n_overflow_iter_per_ms):
                 print("Number of overflow ITER_PER_MS packets for pico #", i, "is", over)
             avg = self._zero_avg(roundtrip_time, n_roundtrip_time)
             print("Average MIDI_ROUNDTRIP_TIME_uS", avg, "(over", n_roundtrip_time, "messages)")
@@ -185,10 +184,9 @@ class mt:
 
         self.track = MidiTrack()
         self.mid.tracks.append(self.track)
-        self.th = threading.Thread(target = mt._capture, args = (self, pico) )
+        self.th = threading.Thread(target=mt._capture, args=(self, pico) )  # NOQA space makes it clearer
         self.th.start()
-        time.sleep(1) # let the _print_above win the race condition agains the prompt
-
+        time.sleep(1)  # let the _print_above win the race condition agains the prompt
 
     def save_captured(self, filename):
         if type(filename) != str:
@@ -199,22 +197,21 @@ class mt:
         print("File saved, waiting for last packet")
         self.th.join()
 
-
     def adc_dump(self, note):
         if (self.must_stop):
             print("Dumping but not capturing")
             print("Run `mt.capture()` to capture.")
-        self.outport.send(mido.Message('sysex', data=(
+        self.outport.send(Message('sysex', data=(
             defined.MIDI_VENDOR,
             defined.MIDI_DUMP_NOTE_ADC,
             note,
-            0,0,0)))
+            0, 0, 0)))
 
     def stop_adc_dump(self):
-        self.outport.send(mido.Message('sysex', data=(
+        self.outport.send(Message('sysex', data=(
             defined.MIDI_VENDOR,
             defined.MIDI_STOP_DUMP_ADC,
-            0,0,0,0)))
+            0, 0, 0, 0)))
         if (not self.must_stop):
             print("Stopped dumpting but still capturing")
             self._print_info()
@@ -232,7 +229,7 @@ class mt:
     def _int_regulation_with(self, a, verbose):
         first = int(a / 127)
         second = a % 127
-        self.outport.send(mido.Message('sysex', data=(
+        self.outport.send(Message('sysex', data=(
             defined.MIDI_VENDOR,
             defined.MIDI_CONTINUE_REGULATION,
             first,
@@ -240,14 +237,14 @@ class mt:
             0, 0)))
         if verbose:
             print("Regulating with",
-                    "0x{:02x}".format(first),
-                    "0x{:02x}".format(second),
-                    "==", first, second)
+                  "0x{:02x}".format(first),
+                  "0x{:02x}".format(second),
+                  "==", first, second)
 
     def _float_regulation_with(self, a, verbose):
         first = int(a)
-        second = int( (a - int(a)) * 100 )
-        self.outport.send(mido.Message('sysex', data=(
+        second = int( (a - int(a)) * 100 )          # NOQA spaces make it clearer
+        self.outport.send(Message('sysex', data=(
             defined.MIDI_VENDOR,
             defined.MIDI_CONTINUE_REGULATION,
             first,
@@ -260,22 +257,21 @@ class mt:
                   "==", first, second)
 
     def regulate(self, note, let_off=0, strike=0, drop=0,
-            vel_const=0, vel_slope=0, verbose=True):
+                 vel_const=0, vel_slope=0, verbose=True):
         self._validate_integer(let_off)
         self._validate_integer(strike)
         self._validate_integer(drop)
         self._validate_float(vel_const)
         self._validate_float(vel_slope)
 
-        self.outport.send(mido.Message('sysex', data=(
+        self.outport.send(Message('sysex', data=(
             defined.MIDI_VENDOR,
             defined.MIDI_REGULATE,
             note,
-            0,0,0)))
+            0, 0, 0)))
         self._int_regulation_with(let_off, verbose)
         self._int_regulation_with(strike, verbose)
         self._int_regulation_with(drop, verbose)
         self._float_regulation_with(vel_const, verbose)
         self._float_regulation_with(vel_slope, verbose)
         self._int_regulation_with(let_off, verbose)             # dummy to close the regulation
-

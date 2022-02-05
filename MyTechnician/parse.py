@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
-import argparse, mido, bz2
-from mido import Message, MidiFile, MidiTrack
+import argparse
 import mytechnician
 
 parser = argparse.ArgumentParser()
@@ -16,6 +15,7 @@ parser.add_argument("-q", "--quiet", help="Do not report housekeeping messages",
 args = parser.parse_args()
 
 mt = mytechnician.mt()
+
 
 def x_and_firstnote(old_x, yi):
     first_note = False
@@ -33,6 +33,7 @@ def x_and_firstnote(old_x, yi):
 
     return new_x, first_note
 
+
 def plot():
     import matplotlib.pyplot as plt      # importing here to allow saving without GTK
     xi, yi = mt.parse_stats(args.filename, quiet=args.quiet)
@@ -41,15 +42,16 @@ def plot():
     fig, ax = plt.subplots()
     for note in yi:
         last_sample = min(len(x), len(yi[note]))  # TODO ignoring the end, but they could be lost anywhere
-        ax.plot(        x[:last_sample],
-                 yi[note][:last_sample],
+        ax.plot(        x[:last_sample],          # NOQA -- I like this indentation better
+                 yi[note][:last_sample],          # NOQA
                 label="MIDI note " + str(note))
 
-    ax.set_ylim(0, 4096);
+    ax.set_ylim(0, 4096)
     ax.set_xlabel('time (s)')
     ax.set_ylabel('Raw ADC value')
     ax.legend()
     plt.show()
+
 
 def dump():
     xi, yi = mt.parse_stats(args.filename, quiet=args.quiet)
@@ -65,7 +67,7 @@ def dump():
 
     xi, first_note = x_and_firstnote(xi, yi)
 
-    for i,x in enumerate(xi):
+    for (i, x) in enumerate(xi):
         print(x, end="\t")
         for note_n in yi:
             try:
@@ -74,6 +76,7 @@ def dump():
                 print("N/A", end="\t")          # TODO piling them up at the end, but they can be lost anywhere
 
         print()
+
 
 if args.stat:
     mt.parse_stats(args.filename)
