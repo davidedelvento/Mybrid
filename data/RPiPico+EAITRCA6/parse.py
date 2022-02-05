@@ -47,8 +47,15 @@ if args.bits_12:
         for i in range(len(time)):
             print(time[i], data[2*i], "", data[2*i+1], sep="\t")
     else:
+        time_interp = []
+        previous_t = time[0]
+        for t in time:
+            time_interp.append((t + previous_t) / 2)
+            time_interp.append(t)
+            previous_t = t
+
         fig, ax = plt.subplots()
-        ax.plot(time, data)
+        ax.plot(time_interp, data)
         ax.set_ylim(0, 4096)
         ax.set_xlabel('time (us)')
         ax.set_ylabel('Raw ADC value')
