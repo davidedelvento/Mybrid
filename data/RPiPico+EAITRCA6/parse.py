@@ -57,11 +57,16 @@ else:
 
     with open(args.filename, mode='rb') as file:
         b = file.read()
+        old_time = b[3]
         for i in range(0, len(b), 4):
             data1.append(b[i])
             data2.append(b[i+1])
             data3.append(b[i+2])
-            time.append(b[i+3])
+            curr_time = b[i+3]
+            while (curr_time < old_time):
+                curr_time += 256
+            time.append(curr_time)
+            old_time = curr_time
 
     if args.dump:
         print("Time\tadc1\tadc2\tadc3")
@@ -73,7 +78,7 @@ else:
         ax.plot(time, data2, label="ADC2")
         ax.plot(time, data3, label="ADC3")
         ax.set_ylim(0, 256)
-        ax.set_xlabel('time (s)')
+        ax.set_xlabel('time (us)')
         ax.set_ylabel('Raw ADC value')
         ax.legend()
         plt.show()
