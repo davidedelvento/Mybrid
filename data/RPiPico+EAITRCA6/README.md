@@ -3,8 +3,8 @@ The data in this directory is (bzip2 compressed) capture of hammer strikes. The 
 
 Why capture in MIDI format instead of plain text? Because so I have lots of other housekeeping information which the Picos produce
 and that may turn useful to understand what is going on (for example packet loss as described in the next paragraph). A simple
-plain text dump of measured numbers require (comments?) to specify this information and a format definition. The MIDI files already
-have this format definition inside.
+plain text dump of measured numbers require something (comments?) to specify this information and a format definition. The MIDI
+files already have this format definition inside.
 
 The `1000us` and the `pp-to-ff` files have been generated with a requested ADC dumping delay of `1ms` between samples. The `100us` file has been
 generated with a `0.1ms` delay. As it can be seen from the data, in the higher-temporal-resolution case, packets have been dropped. This is due
