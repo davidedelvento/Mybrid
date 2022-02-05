@@ -27,21 +27,22 @@ class mt:
         else:
             return 0
 
-    def parse_stats(self, filename):
-        n_adc_packets = 0
+    def parse_stats(self, filename, quiet=False):
+        adc_packets = defaultdict(lambda: list())
+        rtc_packets = []
         n_junk_packets = 0
-        n_rtc_packets = 0
         iter_per_ms = [0, 0, 0]
         n_iter_per_ms = [0, 0, 0]
         n_overflow_iter_per_ms = [0, 0, 0]
-        exclude = []
+        exclude = []  # TODO set, but why do we need this?
         roundtrip_time = 0
         n_roundtrip_time = 0
         notes_on = defaultdict(lambda: 0)
         velocities_on = defaultdict(lambda: 0)
         notes_off = defaultdict(lambda: 0)
         velocities_off = defaultdict(lambda: 0)
-        print()
+        if not quiet: print()
+
         for msg in MidiFile(file=bz2.open(filename, 'rb')).play():
             if msg.type == 'note_on':
                 notes_on[msg.note] += 1
@@ -52,15 +53,19 @@ class mt:
                 velocities_off[msg.note] += msg.velocity
                 continue
             if msg.type != 'sysex':
-                print("Not dealing with", msg.type)
+                print("Warning, not dealing with", msg.type, file=sys.stderr)
                 continue
             try:
                 if msg.data[0] != defined.MIDI_VENDOR:
-                    print("Probable message corruption", msg)
+                    print("Warning, probable message corruption", msg, file=sys.stderr)
                     continue
                 if msg.data[1] > defined.MIDI_MAX_ADC_VALUE:
                     if msg.data[1] == defined.MIDI_RTC:
-                        n_rtc_packets += 1
+                        curr_time = (msg.data[2] * 128 + msg.data[3]) / 1000000 # us
+                        old_time = rtc_packets[-1] if len(rtc_packets)>0 else 0
+                        while (curr_time < old_time):
+                            curr_time += 16384 / 1000000 # us
+                        rtc_packets.append(curr_time)
                         exclude.append('MIDI_RTC')
                     elif msg.data[1] == defined.MIDI_ITER_PER_MS:
                         if msg.data[2] == msg.data[3] and msg.data[2] == 127:
@@ -86,45 +91,46 @@ class mt:
 #  EXPECTING_INIT
 #  TOO_MANY_PACKETS
                     else:
-                        print("Not counting ", end="")
-                        self.pretty_print(msg.data, exclude=[])
+                        print("Warning, not counting ", end="", file=sys.stderr)
+                        self.pretty_print(msg.data, exclude=[], target=sys.stderr)
                 else:
-                    n_adc_packets += 1 # TODO should count different notes separately
+                    adc_packets[msg.data[3]].append(msg.data[1] * 128 + msg.data[2])
             except IndexError:
-                print("Corrupted packet ", end="")
-                self.pretty_print(msg.data, exclude=[])
+                print("Warning, corrupted packet ", end="", file=sys.stderr)
+                self.pretty_print(msg.data, exclude=[], target=sys.stderr)
 
+        if not quiet:
+            print()
+            print("Number of ADC dump packets", sum([len(adc_packets[i]) for i in adc_packets]))
+            print("Number of MIDI_RTC packets", len(rtc_packets))
+            print("Number of startup  packets", n_junk_packets)
+            for pico,it in enumerate(iter_per_ms):
+                avg = self._zero_avg(it, n_iter_per_ms[pico])
+                print("Average of ITER_PER_MS for pico #", pico, "is", avg, "(over", n_iter_per_ms[pico], "messages)")
+            for i,over in enumerate(n_overflow_iter_per_ms):
+                print("Number of overflow ITER_PER_MS packets for pico #", i, "is", over)
+            avg = self._zero_avg(roundtrip_time, n_roundtrip_time)
+            print("Average MIDI_ROUNDTRIP_TIME_uS", avg, "(over", n_roundtrip_time, "messages)")
+            print("NOTE_ON", dict(notes_on))
+            for v in velocities_on:
+                velocities_on[v] /= notes_on[v]
+            print("VELOCITY_ON", dict(velocities_on))
+            print("NOTE_OFF", dict(notes_off))
+            for v in velocities_off:
+                velocities_off[v] /= notes_off[v]
+            print("VELOCITY_OFF", dict(velocities_off))
+        return rtc_packets, adc_packets
 
-        print()
-        print("Number of ADC dump packets", n_adc_packets)
-        print("Number of MIDI_RTC packets", n_rtc_packets)
-        print("Number of startup  packets", n_junk_packets)
-        for pico,it in enumerate(iter_per_ms):
-            avg = self._zero_avg(it, n_iter_per_ms[pico])
-            print("Average of ITER_PER_MS for pico #", pico, "is", avg, "(over", n_iter_per_ms[pico], "messages)")
-        for i,over in enumerate(n_overflow_iter_per_ms):
-            print("Number of overflow ITER_PER_MS packets for pico #", i, "is", over)
-        avg = self._zero_avg(roundtrip_time, n_roundtrip_time)
-        print("Average MIDI_ROUNDTRIP_TIME_uS", avg, "(over", n_roundtrip_time, "messages)")
-        print("NOTE_ON", dict(notes_on))
-        for v in velocities_on:
-            velocities_on[v] /= notes_on[v]
-        print("VELOCITY_ON", dict(velocities_on))
-        print("NOTE_OFF", dict(notes_off))
-        for v in velocities_off:
-            velocities_off[v] /= notes_off[v]
-        print("VELOCITY_OFF", dict(velocities_off))
-
-    def pretty_print(self, data, exclude=[]):
+    def pretty_print(self, data, exclude=[], target=sys.stdout):
         my_midi_strings = list(midi_strings.keys())
         for e in exclude:
             my_midi_strings.remove(e)
 
         if data[1] in midi_values:
             if midi_values[data[1]] in my_midi_strings:
-                print(midi_values[data[1]], data[2], data[3])
+                print(midi_values[data[1]], data[2], data[3], file=target)
         else:
-            print(data[1], data[2], data[3])
+            print(data[1], data[2], data[3], file=target)
 
     def _print_info(self):
         print("Run `mt.save_captured(file)` to stop capturing and save.")
