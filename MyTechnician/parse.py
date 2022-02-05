@@ -36,14 +36,16 @@ def x_and_firstnote(old_x, yi):
 
 def plot():
     import matplotlib.pyplot as plt      # importing here to allow saving without GTK
+    import numpy as np
     xi, yi = mt.parse_stats(args.filename, quiet=args.quiet)
     x, first_note = x_and_firstnote(xi, yi)
+    x = [item if item != "N/A" else np.nan for item in x]
 
     fig, ax = plt.subplots()
     for note in yi:
-        last_sample = min(len(x), len(yi[note]))  # TODO ignoring the end, but they could be lost anywhere
-        ax.plot(        x[:last_sample],          # NOQA -- I like this indentation better
-                 yi[note][:last_sample],          # NOQA
+        yi[note] = [item if item != "N/A" else np.nan for item in yi[note]]
+        ax.plot(        x,          # NOQA -- I like this indentation better
+                 yi[note],          # NOQA
                 label="MIDI note " + str(note))
 
     ax.set_ylim(0, 4096)

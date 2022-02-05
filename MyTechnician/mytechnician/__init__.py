@@ -8,6 +8,7 @@ import threading
 import time
 import sys
 import bz2
+import statistics
 from collections import defaultdict
 
 pico_in  = mido.get_input_names()[1]           # NOQA -- I like this indentation better
@@ -24,27 +25,33 @@ for k in defined.__dict__.keys():
 
 
 class mt:
-    def _zero_avg(self, num, den):
-        if den > 0:
-            return num/den
-        else:
-            return 0
+    def _previous_not_NA(self, mylist):
+        previous = "N/A"
+        i = 0
+        while (previous == "N/A"):
+            i = i + 1
+            previous = mylist[-i] if (len(mylist) > i - 1) else 0
+        return previous
+
+    def _count_missing(self, all_packets):
+        n_missing_packets = all_packets.count("N/A")
+        n_present_packets = len(all_packets) - n_missing_packets
+        return n_missing_packets, n_present_packets
 
     def parse_stats(self, filename, quiet=False):
         adc_packets = defaultdict(lambda: list())
         rtc_packets = []
         n_junk_packets = 0
-        iter_per_ms = [0, 0, 0]
-        n_iter_per_ms = [0, 0, 0]
-        n_overflow_iter_per_ms = [0, 0, 0]
-        roundtrip_time = 0
-        n_roundtrip_time = 0
+        iter_per_ms = defaultdict(lambda: list())
+        n_overflow_iter_per_ms = defaultdict(lambda: 0)
+        roundtrip_time = []
         notes_on = defaultdict(lambda: 0)
         velocities_on = defaultdict(lambda: 0)
         notes_off = defaultdict(lambda: 0)
         velocities_off = defaultdict(lambda: 0)
         if not quiet: print()                    # NOQA -- simple and clear enough
 
+        previous_packet = None  # Check if ADC and RTC packets alternate
         for msg in MidiFile(file=bz2.open(filename, 'rb')).play():
             if msg.type == 'note_on':
                 notes_on[msg.note] += 1
@@ -64,10 +71,15 @@ class mt:
                 if msg.data[1] > defined.MIDI_MAX_ADC_VALUE:
                     if msg.data[1] == defined.MIDI_RTC:
                         curr_time = (msg.data[2] * 128 + msg.data[3]) / 1000000   # us
-                        old_time = rtc_packets[-1] if (len(rtc_packets) > 0) else 0
+                        old_time = self._previous_not_NA(rtc_packets)
                         while (curr_time < old_time):
                             curr_time += 16384 / 1000000                          # us
                         rtc_packets.append(curr_time)
+                        if previous_packet == defined.MIDI_RTC:
+                            # TODO make sure N_ADC packets not just one
+                            for key in adc_packets:
+                                adc_packets[key].append("N/A")
+                        previous_packet = defined.MIDI_RTC
                     elif msg.data[1] == defined.MIDI_ITER_PER_MS:
                         if msg.data[2] == msg.data[3] and msg.data[2] == 127:
                             n_junk_packets += 1
@@ -75,11 +87,9 @@ class mt:
                         if msg.data[3] == 127:
                             n_overflow_iter_per_ms[msg.data[2]] += 1
                             continue
-                        iter_per_ms[msg.data[2]] += msg.data[3]
-                        n_iter_per_ms[msg.data[2]] += 1
+                        iter_per_ms[msg.data[2]].append(msg.data[3])
                     elif msg.data[1] == defined.MIDI_ROUNDTRIP_TIME_uS:
-                        roundtrip_time += msg.data[2] * 128 + msg.data[3]
-                        n_roundtrip_time += 1
+                        roundtrip_time.append(msg.data[2] * 128 + msg.data[3])
 # MIDI_REGULATE
 # MIDI_CONTINUE_REGULATION
 # MIDI_DUMP_REGULATION
@@ -93,23 +103,50 @@ class mt:
                         print("Warning, not counting ", end="", file=sys.stderr)
                         self.pretty_print(msg.data, target=sys.stderr)
                 else:
+                    if previous_packet == defined.MIDI_MAX_ADC_VALUE:
+                        # TODO count up to N_ADC packets to save b/w
+                        rtc_packets.append("N/A")
                     adc_packets[msg.data[3]].append(msg.data[1] * 128 + msg.data[2])
+                    previous_packet = defined.MIDI_MAX_ADC_VALUE
             except IndexError:
                 print("Warning, corrupted packet ", end="", file=sys.stderr)
                 self.pretty_print(msg.data, target=sys.stderr)
 
         if not quiet:
+            n_adc_missing_packets = 0
+            n_adc_present_packets = 0
+            for i in adc_packets:
+                miss, pres = self._count_missing(adc_packets[i])
+                n_adc_missing_packets += miss
+                n_adc_present_packets += pres
+
+            n_rtc_missing_packets, n_rtc_present_packets = self._count_missing(rtc_packets)
+
             print()
-            print("Number of ADC dump packets", sum([len(adc_packets[i]) for i in adc_packets]))
-            print("Number of MIDI_RTC packets", len(rtc_packets))
+            print("Number of       ADC      dump    packets", n_adc_present_packets)
+            print("Number of known ADC      missing packets", n_adc_missing_packets)
+            print("Number of       MIDI_RTC         packets", n_rtc_present_packets)
+            print("Number of known MIDI_RTC missing packets", n_rtc_missing_packets)
             print("Number of startup  packets", n_junk_packets)
-            for (pico, it) in enumerate(iter_per_ms):
-                avg = self._zero_avg(it, n_iter_per_ms[pico])
-                print("Average of ITER_PER_MS for pico #", pico, "is", avg, "(over", n_iter_per_ms[pico], "messages)")
-            for (i, over) in enumerate(n_overflow_iter_per_ms):
-                print("Number of overflow ITER_PER_MS packets for pico #", i, "is", over)
-            avg = self._zero_avg(roundtrip_time, n_roundtrip_time)
-            print("Average MIDI_ROUNDTRIP_TIME_uS", avg, "(over", n_roundtrip_time, "messages)")
+            for pico in iter_per_ms:
+                if len(iter_per_ms[pico]) > 0:
+                    avg = statistics.mean(iter_per_ms[pico])
+                    std = statistics.stdev(iter_per_ms[pico])
+                else:
+                    avg = "N/A"
+                    std = "N/A"
+                print("ITER_PER_MS for pico #", pico, " avg:", avg, "stdev:", std, "(over", len(iter_per_ms[pico]), "messages)")
+            if len(iter_per_ms) == 0:
+                print("No ITER_PER_MS packets")
+            for pico in n_overflow_iter_per_ms:
+                print("Number of overflow ITER_PER_MS packets for pico #", pico, "is", n_overflow_iter_per_ms[pico])
+            if len(roundtrip_time) > 0:
+                avg = statistics.mean(roundtrip_time)
+                std = statistics.stdev(roundtrip_time)
+            else:
+                avg = "N/A"
+                std = "N/A"
+            print("MIDI_ROUNDTRIP_TIME_uS. avg:", avg, "stdev:", std, "(over", len(roundtrip_time), "messages)")
             print("NOTE_ON", dict(notes_on))
             for v in velocities_on:
                 velocities_on[v] /= notes_on[v]
