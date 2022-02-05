@@ -4,7 +4,7 @@ import mido
 from mido import Message, MidiFile, MidiTrack
 from cdefine import CDefine
 
-import threading, time, blessed, sys, bz2
+import threading, time, sys, bz2
 from collections import defaultdict
 
 pico_in  = mido.get_input_names()[1]
@@ -132,7 +132,7 @@ class mt:
 
     def __init__(self):
         self.th = None
-        self.t = blessed.Terminal()
+        self.term = None
         self.outport = mido.open_output(pico_out)
         print("Opened", pico_out, "for output", file=sys.stderr)
         self.must_stop = True
@@ -140,8 +140,14 @@ class mt:
         self.track = None
 
     def _print_above(self, stuff):
-        with self.t.location(self.t.width - len(stuff) - 1, 0):
-            print(stuff, end=None)
+        try:
+            if self.term is None:
+                import blessed
+                self.term = blessed.Terminal()
+            with self.term.location(self.term.width - len(stuff) - 1, 0):
+                print(stuff, end=None)
+        except ModuleNotFoundError:
+            pass
 
     def _capture(self, pico):
         with mido.open_input(pico) as inport:

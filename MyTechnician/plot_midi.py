@@ -57,6 +57,6 @@ if not args.dump:
     ax.legend()
     plt.show()
 else:
-    print("Time (s)  ADC_value")
-    for xi, yi in load_data():
-        print(xi, yi)
+    print("Time_(s)  ADC_value MIDI_note")
+    for xi, yi, note in load_data():
+        print(xi, yi, note)
