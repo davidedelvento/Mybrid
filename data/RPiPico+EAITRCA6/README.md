@@ -1,3 +1,15 @@
+# Status
+
+To capture data at the highest temporal resolution possible and avoid the problem mentioned below,
+I am using an SD card with the code I posted [here](https://github.com/davidedelvento/no-OS-FatFS-SD-SPI-RPi-Pico)
+
+That information is in the `hires` directory and it is in RAW binary format. The `parse.py` script
+can extract that and dump it in text format or plot it.
+
+
+
+# Less relevant information
+
 The data in this directory is (bzip2 compressed) capture of hammer strikes. The capture has been performed with
 [MyTechnician](https://github.com/davidedelvento/Mybrid/tree/main/MyTechnician/mytechnician).
 
