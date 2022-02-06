@@ -2,7 +2,7 @@
 
 import argparse
 
-parser = argparse.ArgumentParser(description = "Parser of High Resolution binary (not MIDI) files")
+parser = argparse.ArgumentParser(description="Parser of High Resolution binary (not MIDI) files")
 parser.add_argument("filename", help="Load <FILENAME> for plotting, analysis or dumping in a text file")
 
 action = parser.add_mutually_exclusive_group(required=True)
@@ -11,19 +11,20 @@ action.add_argument("-p", "--plot", help="Plot the content of FILENAME with matp
 
 file_format = parser.add_mutually_exclusive_group(required=True)
 file_format.add_argument("-12", help="Assume the file has two 12-bit data points from same      ADC channel per timestamp",
-        dest="bits_12", action="store_true")
+                         dest="bits_12", action="store_true")
 file_format.add_argument("-8", help="Assume the file has three 8-bit data points from different ADC channel per timestamp",
-        dest="bits_8", action="store_true")
+                         dest="bits_8", action="store_true")
 args = parser.parse_args()
+
 
 def parse_2_12(b0, b1, b2):
     d2 = b0 + ((b1 & 0x0F) << 8)
     d1 = (b2 << 4) + ((b1 & 0xF0) >> 4)
     return d1, d2
 
+
 if args.plot:
     import matplotlib.pyplot as plt      # importing here to allow saving without GTK
-    import numpy as np
 
 if args.bits_12:
     data = []
