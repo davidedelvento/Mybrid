@@ -51,7 +51,7 @@ if args.bits_12:
         print("Time\tadc_at_time\tadc_at_time_plus")
         for i in range(len(time)):
             print(time[i], data[2*i], "", data[2*i+1], sep="\t")
-    else:
+    elif args.plot:
         time_interp = []
         previous_t = time[0]
         for t in time:
@@ -66,7 +66,7 @@ if args.bits_12:
         ax.set_ylabel('Raw ADC value')
         plt.show()
 
-else:
+elif args.bits_8:
     data1 = []
     data2 = []
     data3 = []
@@ -93,7 +93,7 @@ else:
         print("Time\tadc1\tadc2\tadc3")
         for i in range(len(time)):
             print(time[i], data1[i], data2[i], data3[i], sep="\t")
-    else:
+    elif args.plot:
         fig, ax = plt.subplots()
         ax.plot(time, data1, label="ADC1")
         ax.plot(time, data2, label="ADC2")
