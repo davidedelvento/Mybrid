@@ -8,6 +8,7 @@ parser.add_argument("filename", help="Load <FILENAME> for plotting, analysis or 
 action = parser.add_mutually_exclusive_group(required=True)
 action.add_argument("-d", "--dump", help="Dump the content of FILENAME on the terminal", action="store_true")
 action.add_argument("-p", "--plot", help="Plot the content of FILENAME with matplotlib", action="store_true")
+action.add_argument("-c", "--comparator", help="Pretend to a RPi Pico and produce MIDI with the comparator approach", action="store_true")
 
 file_format = parser.add_mutually_exclusive_group(required=True)
 file_format.add_argument("-12", help="Assume the file has two 12-bit data points from same      ADC channel per timestamp",
@@ -65,6 +66,8 @@ if args.bits_12:
         ax.set_xlabel('time (us)')
         ax.set_ylabel('Raw ADC value')
         plt.show()
+    elif args.comparator:
+        print("TBD")
 
 elif args.bits_8:
     data1 = []
@@ -103,3 +106,5 @@ elif args.bits_8:
         ax.set_ylabel('Raw ADC value')
         ax.legend()
         plt.show()
+    elif args.comparator:
+        print("TBD")
