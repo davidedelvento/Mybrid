@@ -32,13 +32,17 @@ if args.bits_12:
     with open(args.filename, mode='rb') as file:
         b = file.read()
         old_time = b[3]
+        increment = 256
         for i in range(0, len(b), 4):
             d1, d2 = parse_2_12(b[i], b[i+1], b[i+2])
             data.append(d1)
             data.append(d2)
             curr_time = b[i+3]
-            while (curr_time < old_time):
-                curr_time += 256
+            if (curr_time < old_time):
+                curr_time += increment
+                if (curr_time < old_time):
+                    increment += 256
+                    curr_time += 256
             time.append(curr_time)
             old_time = curr_time
 
@@ -70,13 +74,17 @@ else:
     with open(args.filename, mode='rb') as file:
         b = file.read()
         old_time = b[3]
+        increment = 256
         for i in range(0, len(b), 4):
             data1.append(b[i])
             data2.append(b[i+1])
             data3.append(b[i+2])
             curr_time = b[i+3]
-            while (curr_time < old_time):
-                curr_time += 256
+            if (curr_time < old_time):
+                curr_time += increment
+                if (curr_time < old_time):
+                    increment += 256
+                    curr_time += 256
             time.append(curr_time)
             old_time = curr_time
 
