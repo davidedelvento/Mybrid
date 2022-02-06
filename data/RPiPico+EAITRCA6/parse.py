@@ -17,6 +17,16 @@ file_format.add_argument("-8", help="Assume the file has three 8-bit data points
                          dest="bits_8", action="store_true")
 args = parser.parse_args()
 
+IDLE = 0
+FLY = 1
+SOUND = 2
+LET_OFF = 3950
+STRIKE = 2600
+DROP = 4080
+# see https://pianoclack.com/forum/d/289-scanning-speed-and-velocity-mapping-of-cybrid/3
+VEL_CONST = 57.96 + 71.3 * log10f(2.0)
+VEL_SLOPE = 71.3
+
 
 def parse_2_12(b0, b1, b2):
     d2 = b0 + ((b1 & 0x0F) << 8)
@@ -72,7 +82,21 @@ if args.bits_12:
         plt.show()
     elif args.comparator:
         time_interp = interpolate_time(time)
-        print("TBD")
+        status = IDLE
+        start_time = 0
+        for (i, dist) in enumerate(data):
+            if status == IDLE:
+                if dist < LET_OFF:
+                    status = FLY
+                    start_time = time_interp[i]
+            elif status == FLY:
+                if dist < STRIKE:
+                    status = SOUND
+                    print("note_on, time=", time_interp[i], "vel=", midi_vel(time_interp[i] - start_time))
+            elif status == SOUND:
+                if dist > DROP:
+                    status = IDLE
+                    print("note_off, time=", time_interp[i])
 
 elif args.bits_8:
     data1 = []
@@ -112,4 +136,8 @@ elif args.bits_8:
         ax.legend()
         plt.show()
     elif args.comparator:
+        LET_OFF /= 16       # 12 to 8 bit ratio
+        STRIKE /= 16
+        DROP /= 16
+
         print("TBD")
