@@ -6,6 +6,9 @@ I am using an SD card with the code I posted [here](https://github.com/davidedel
 That information is in the `hires` directory and it is in RAW binary format. The `parse.py` script
 can extract that and dump it in text format or plot it.
 
+See https://pianoclack.com/forum/d/289-scanning-speed-and-velocity-mapping-of-cybrid/121 for some preliminary
+plots and download the data.
+
 
 
 # Less relevant information
