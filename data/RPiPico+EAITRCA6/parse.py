@@ -50,6 +50,16 @@ def interpolate_time(time):
     return time_interp
 
 
+def finish_plot():
+    ax.set_xlabel('time (us)')
+    ax.set_ylabel('Raw ADC value')
+    plt.axhline(y=LET_OFF, linestyle='-', color="green", label="let off")
+    plt.axhline(y=STRIKE, linestyle='-', color="yellow", label="strike")
+    plt.axhline(y=DROP, linestyle='-', color="red", label="drop")
+    ax.legend()
+    plt.show()
+
+
 if args.plot:
     import matplotlib.pyplot as plt      # importing here to allow saving without GTK
 
@@ -83,13 +93,7 @@ if args.bits_12:
         fig, ax = plt.subplots()
         ax.plot(time_interp, data, label="ADC")
         ax.set_ylim(0, 4096)
-        ax.set_xlabel('time (us)')
-        ax.set_ylabel('Raw ADC value')
-        plt.axhline(y=LET_OFF, linestyle='-', color="green", label="let off")
-        plt.axhline(y=STRIKE, linestyle='-', color="yellow", label="strike")
-        plt.axhline(y=DROP, linestyle='-', color="red", label="drop")
-        ax.legend()
-        plt.show()
+        finish_plot()
     elif args.comparator:
         time_interp = interpolate_time(time)
         status = IDLE
@@ -146,12 +150,6 @@ elif args.bits_8:
         ax.plot(time, data2, label="ADC2")
         ax.plot(time, data3, label="ADC3")
         ax.set_ylim(0, 256)
-        ax.set_xlabel('time (us)')
-        ax.set_ylabel('Raw ADC value')
-        plt.axhline(y=LET_OFF, linestyle='-', color="green", label="let off")
-        plt.axhline(y=STRIKE, linestyle='-', color="yellow", label="strike")
-        plt.axhline(y=DROP, linestyle='-', color="red", label="drop")
-        ax.legend()
-        plt.show()
+        finish_plot()
     elif args.comparator:
         print("TBD")
