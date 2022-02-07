@@ -30,7 +30,8 @@ VEL_SLOPE = 71.3
 
 
 def midi_vel(delta_time):
-    return int(VEL_CONST)
+    print(delta_time)
+    return int(VEL_CONST - VEL_SLOPE * math.log10(delta_time/1000))
 
 
 def parse_2_12(b0, b1, b2):
@@ -80,10 +81,14 @@ if args.bits_12:
     elif args.plot:
         time_interp = interpolate_time(time)
         fig, ax = plt.subplots()
-        ax.plot(time_interp, data)
+        ax.plot(time_interp, data, label="ADC")
         ax.set_ylim(0, 4096)
         ax.set_xlabel('time (us)')
         ax.set_ylabel('Raw ADC value')
+        plt.axhline(y=LET_OFF, linestyle='-', color="green", label="let off")
+        plt.axhline(y=STRIKE, linestyle='-', color="yellow", label="strike")
+        plt.axhline(y=DROP, linestyle='-', color="red", label="drop")
+        ax.legend()
         plt.show()
     elif args.comparator:
         time_interp = interpolate_time(time)
@@ -98,6 +103,8 @@ if args.bits_12:
                 if dist < STRIKE:
                     status = SOUND
                     print("note_on, time=", time_interp[i], "vel=", midi_vel(time_interp[i] - start_time))
+                elif dist > DROP:
+                    status = IDLE
             elif status == SOUND:
                 if dist > DROP:
                     status = IDLE
@@ -108,6 +115,9 @@ elif args.bits_8:
     data2 = []
     data3 = []
     time = []
+    LET_OFF /= 16       # 12 to 8 bit ratio
+    STRIKE /= 16
+    DROP /= 16
 
     with open(args.filename, mode='rb') as file:
         b = file.read()
@@ -138,11 +148,10 @@ elif args.bits_8:
         ax.set_ylim(0, 256)
         ax.set_xlabel('time (us)')
         ax.set_ylabel('Raw ADC value')
+        plt.axhline(y=LET_OFF, linestyle='-', label="let off")
+        plt.axhline(y=STRIKE, linestyle='-', label="strike")
+        plt.axhline(y=DROP, linestyle='-', label="drop")
         ax.legend()
         plt.show()
     elif args.comparator:
-        LET_OFF /= 16       # 12 to 8 bit ratio
-        STRIKE /= 16
-        DROP /= 16
-
         print("TBD")
