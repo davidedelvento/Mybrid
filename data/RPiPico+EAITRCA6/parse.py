@@ -156,4 +156,11 @@ elif args.bits_8:
         ax.set_ylim(0, 256)
         finish_plot()
     elif args.comparator:
-        print("TBD")
+        print("MIDI data for ADC 1")
+        parse_ADC_data(data1, time)
+        print("=======")
+        print("MIDI data for ADC 2")
+        parse_ADC_data(data2, time)
+        print("=======")
+        print("MIDI data for ADC 3")
+        parse_ADC_data(data3, time)
