@@ -2,6 +2,7 @@
 
 import argparse
 import math
+import bz2
 
 parser = argparse.ArgumentParser(description="Parser of High Resolution binary (not MIDI) files")
 parser.add_argument("filename", help="Load <FILENAME> for plotting, analysis or dumping in a text file")
@@ -87,7 +88,7 @@ if args.bits_12:
     data = []
     time = []
 
-    with open(args.filename, mode='rb') as file:
+    with bz2.open(args.filename, mode='rb') as file:
         b = file.read()
         old_time = b[3]
         increment = 256
@@ -127,7 +128,7 @@ elif args.bits_8:
     STRIKE = STRIKE / 16 - 1
     DROP = DROP / 16 - 1
 
-    with open(args.filename, mode='rb') as file:
+    with bz2.open(args.filename, mode='rb') as file:
         b = file.read()
         old_time = b[3]
         increment = 256
