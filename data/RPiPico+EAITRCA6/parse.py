@@ -123,9 +123,9 @@ elif args.bits_8:
     data2 = []
     data3 = []
     time = []
-    LET_OFF /= 16       # 12 to 8 bit ratio
-    STRIKE /= 16
-    DROP /= 16
+    LET_OFF = LET_OFF / 16 - 1       # 12 to 8 bit ratio
+    STRIKE = STRIKE / 16 - 1
+    DROP = DROP / 16 - 1
 
     with open(args.filename, mode='rb') as file:
         b = file.read()
