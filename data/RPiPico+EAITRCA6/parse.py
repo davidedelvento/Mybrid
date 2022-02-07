@@ -148,9 +148,9 @@ elif args.bits_8:
         ax.set_ylim(0, 256)
         ax.set_xlabel('time (us)')
         ax.set_ylabel('Raw ADC value')
-        plt.axhline(y=LET_OFF, linestyle='-', label="let off")
-        plt.axhline(y=STRIKE, linestyle='-', label="strike")
-        plt.axhline(y=DROP, linestyle='-', label="drop")
+        plt.axhline(y=LET_OFF, linestyle='-', color="green", label="let off")
+        plt.axhline(y=STRIKE, linestyle='-', color="yellow", label="strike")
+        plt.axhline(y=DROP, linestyle='-', color="red", label="drop")
         ax.legend()
         plt.show()
     elif args.comparator:
