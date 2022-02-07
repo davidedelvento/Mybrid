@@ -25,12 +25,12 @@ LET_OFF = 3950
 STRIKE = 2600
 DROP = 4080
 # see https://pianoclack.com/forum/d/289-scanning-speed-and-velocity-mapping-of-cybrid/3
-VEL_SLOPE = 71.3
-VEL_CONST = 57.96 + VEL_SLOPE * math.log10(2000)
+VEL_SLOPE = 120
+VEL_CONST = 110 + VEL_SLOPE * math.log10(2000)
 
 
 def midi_vel(delta_time):
-    print(delta_time)
+    print(delta_time, math.log10(delta_time))
     return int(VEL_CONST - VEL_SLOPE * math.log10(delta_time))
 
 
