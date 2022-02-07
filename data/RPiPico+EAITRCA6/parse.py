@@ -60,6 +60,26 @@ def finish_plot():
     plt.show()
 
 
+def parse_ADC_data(d, t):
+    status = IDLE
+    start_time = 0
+    for (i, dist) in enumerate(d):
+        if status == IDLE:
+            if dist < LET_OFF:
+                status = FLY
+                start_time = t[i]
+        elif status == FLY:
+            if dist < STRIKE:
+                status = SOUND
+                print("note_on, time=", t[i], "vel=", midi_vel(t[i] - start_time))
+            elif dist > DROP:
+                status = IDLE
+        elif status == SOUND:
+            if dist > DROP:
+                status = IDLE
+                print("note_off, time=", t[i])
+
+
 if args.plot:
     import matplotlib.pyplot as plt      # importing here to allow saving without GTK
 
@@ -96,23 +116,7 @@ if args.bits_12:
         finish_plot()
     elif args.comparator:
         time_interp = interpolate_time(time)
-        status = IDLE
-        start_time = 0
-        for (i, dist) in enumerate(data):
-            if status == IDLE:
-                if dist < LET_OFF:
-                    status = FLY
-                    start_time = time_interp[i]
-            elif status == FLY:
-                if dist < STRIKE:
-                    status = SOUND
-                    print("note_on, time=", time_interp[i], "vel=", midi_vel(time_interp[i] - start_time))
-                elif dist > DROP:
-                    status = IDLE
-            elif status == SOUND:
-                if dist > DROP:
-                    status = IDLE
-                    print("note_off, time=", time_interp[i])
+        parse_ADC_data(data, time_interp)
 
 elif args.bits_8:
     data1 = []
