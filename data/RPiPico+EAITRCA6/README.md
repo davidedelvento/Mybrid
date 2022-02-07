@@ -1,13 +1,14 @@
 # Status
 
 To capture data at the highest temporal resolution possible and avoid the problem mentioned below,
-I am using an SD card with the code I posted [here](https://github.com/davidedelvento/no-OS-FatFS-SD-SPI-RPi-Pico)
+I am using an SD card with the code I posted [here](https://github.com/davidedelvento/no-OS-FatFS-SD-SPI-RPi-Pico/blob/master/example/tests/big_file_test.c#L66-L81)
 
-That information is in the `hires` directory and it is in RAW binary format. The `parse.py` script
-can extract that and dump it in text format or plot it.
+That information is in the `hires` directory and it is bzip2'ed RAW binary format. The `parse.py` script
+can extract that and dump it in text format, plot it or pretend to be a Pico and print information
+about what MIDI velocities would that setting create
 
-See https://pianoclack.com/forum/d/289-scanning-speed-and-velocity-mapping-of-cybrid/121 for some preliminary
-plots and download the data.
+See https://pianoclack.com/forum/d/289-scanning-speed-and-velocity-mapping-of-cybrid/121 for some 
+plots and download the data in `txt` format
 
 
 
