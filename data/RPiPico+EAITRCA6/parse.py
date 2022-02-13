@@ -3,6 +3,7 @@
 import argparse
 import math
 import bz2
+import statistics
 
 parser = argparse.ArgumentParser(description="Parser of High Resolution binary (not MIDI) files")
 parser.add_argument("filename", help="Load <FILENAME> for plotting, analysis or dumping in a text file")
@@ -69,6 +70,21 @@ def interpolate_time(time):
         time_interp.append(t)
         previous_t = t
     return time_interp
+
+
+def print_stats(time):
+    delta_t = [t1 - t2 for (t2, t1) in zip(time[1:], time[2:])]
+    avg = statistics.mean(delta_t)
+    std = statistics.stdev(delta_t)
+    print("DELTA t statistics")
+    print("avg =", avg, "std_dev =", std, "max =", max(delta_t), "min =", min(delta_t))
+    print("median =", statistics.median(delta_t))
+    try:
+        print("deciles =", statistics.quantiles(delta_t, n=10))
+        print("percentiles =", statistics.quantiles(delta_t, n=100))
+        print("multimode =", statistics.multimode(delta_t))
+    except AttributeError:
+        print("mode =", statistics.mode(delta_t))
 
 
 def plot_midi_all_regulations(data, time, bits, label="", options=['small', 'medium', 'large']):
@@ -164,6 +180,7 @@ if args.bits_12:
         finish_adc_plot(bits=12)
     elif args.midi_plot:
         time_interp = interpolate_time(time)
+        print_stats(time_interp)
         fig, ax = plt.subplots()
         plot_midi_all_regulations(data, time_interp, bits=12)
 
@@ -209,6 +226,7 @@ elif args.bits_8:
         finish_adc_plot(bits=8)
     elif args.midi_plot:
         fig, ax = plt.subplots()
+        print_stats(time)
         plot_midi_all_regulations(data1, time, bits=8, label="note 1")
         plot_midi_all_regulations(data2, time, bits=8, label="note 2")
         plot_midi_all_regulations(data3, time, bits=8, label="note 3")
