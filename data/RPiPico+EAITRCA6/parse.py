@@ -55,15 +55,16 @@ class regulation():
     def set_sav_gol(self, window_len, position):
         self.sg = True
         self.coeffs = savgol_coeffs(window_len, 2, deriv=1, use='dot', delta=0.01, pos=position)
-        self.start_index = int((window_len + 1) / 2)
-        if position is not None:
-            self.start_index = int((window_len + position + 1) / 2)
+        if position is None:
+            position = int((window_len - 1) / 2)
+        self.end_index = window_len - position
+        self.start_index = - position
 
-    def savgol_midi(self, value, index):
+    def savgol_midi(self, value, curr_index):
         velocity = 0
         for (i, c) in enumerate(self.coeffs):
-            velocity += c * value[index - self.start_index + i]
-        return 80
+            velocity += c * value[curr_index - self.start_index + i]
+        return velocity
 
 
 def midi_vel(delta_time, r):
