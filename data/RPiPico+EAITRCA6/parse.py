@@ -74,7 +74,7 @@ class regulation():
         velocity = 0
         for (i, c) in enumerate(self.coeffs):
             velocity += c * value[curr_index - self.start_index + i]
-        return velocity
+        return -velocity, curr_index + self.end_index - 1
 
 
 def midi_vel(delta_time, r):
@@ -186,14 +186,15 @@ def parse_ADC_data(d, t, r):
                 status = SOUND
                 if not r.sg:
                     m = midi_vel(t[i] - start_time, r)
+                    time_index = i
                 else:
-                    m = r.savgol_midi(d, i)
+                    m, time_index = r.savgol_midi(d, i)
                 if m == 0:
                     print("warning, apparent note-off data")
-                midi_data.append(0)                      # making the plot
-                time_data.append(t[i-1] / 1000000)       # easier to read
+                midi_data.append(0)                               # making the plot
+                time_data.append(t[time_index-1] / 1000000)       # easier to read
                 midi_data.append(m)
-                time_data.append(t[i] / 1000000)         # us
+                time_data.append(t[time_index] / 1000000)         # us
             elif dist > r.DROP:
                 status = IDLE
         elif status == SOUND:
