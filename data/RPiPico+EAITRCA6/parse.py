@@ -55,8 +55,14 @@ class regulation():
     def set_sav_gol(self, window_len, position):
         self.sg = True
         self.coeffs = savgol_coeffs(window_len, 2, deriv=1, use='dot', delta=0.01, pos=position)
+        self.start_index = int((window_len + 1) / 2)
+        if position is not None:
+            self.start_index = int((window_len + position + 1) / 2)
 
-    def savgol_midi(self):
+    def savgol_midi(self, value, index):
+        velocity = 0
+        for (i, c) in enumerate(self.coeffs):
+            velocity += c * value[index - self.start_index + i]
         return 80
 
 
@@ -149,7 +155,7 @@ def parse_ADC_data(d, t, r):
                 if not r.sg:
                     m = midi_vel(t[i] - start_time, r)
                 else:
-                    m = r.savgol_midi()
+                    m = r.savgol_midi(d, i)
                 if m == 0:
                     print("warning, apparent note-off data")
                 midi_data.append(0)                      # making the plot
