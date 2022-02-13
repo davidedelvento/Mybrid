@@ -13,12 +13,22 @@ action.add_argument("-d", "--dump", help="Dump the content of FILENAME on the te
 action.add_argument("-p", "--plot", help="Plot the content of FILENAME with matplotlib", action="store_true")
 action.add_argument("-m", "--midi-plot", help="Pretend to a RPi Pico: plot MIDI velocities", action="store_true")
 
+action = parser.add_mutually_exclusive_group()
+action.add_argument("-c", "--comparator", help="Compute MIDI velocities with comparator approach only", action="store_true")
+action.add_argument("-s", "--savgol", help="Compute MIDI velocities with Sav-Gol approach only", action="store_true")
+action.add_argument("-b", "--both", help="MIDI vel with both comparator & Sav-Gol (succint)", action="store_true")
+action.add_argument("-a", "--all", help="MIDI vel with both comparator & Sav-Gol (complete)", action="store_true")
+
 file_format = parser.add_mutually_exclusive_group(required=True)
 file_format.add_argument("-12", help="Force two 12-bit samples, 1-ADC channel per timestamp",
                          dest="bits_12", action="store_true")
 file_format.add_argument("-8", help="Force three 8-bit samples, 3-ADC channels per timestamp",
                          dest="bits_8", action="store_true")
 args = parser.parse_args()
+
+
+if not any((args.comparator, args.savgol, args.both, args.all)):
+    args.both = True
 
 IDLE = 0
 FLY = 1
@@ -104,7 +114,12 @@ def print_stats(time):
 
 def plot_midi_all_regulations(data, time, bits, label="", options=None):
     if options is None:
-        options = ['small', 'medium', 'large']
+        if args.comparator or args.all:
+            options = ['small', 'medium', 'large']
+        elif args.both:
+            options = ['small']
+        else:
+            options = []
     prefix = ""
     if label != "":
         prefix = label + " "
@@ -115,8 +130,18 @@ def plot_midi_all_regulations(data, time, bits, label="", options=None):
         midi_data, time_data = parse_ADC_data(data, time, r)
         ax.plot(time_data, midi_data, label=prefix+"comparator: " + range, linestyle=ls, linewidth=lw)
     r = regulation(bits=bits)
-    for window_len in [13, 23]:
-        for position in ['center', 'end']:
+
+    window_options = []
+    position_options = []
+    if args.both:
+        window_options = [23]
+        position_options = ['center']
+    elif args.all or args.savgol:
+        window_options = [13, 23]
+        position_options = ['center', 'end']
+
+    for window_len in window_options:
+        for position in position_options:
             suffix = "sg (" + str(window_len) + ", " + position + ")"
             if position == 'center':
                 position = None
