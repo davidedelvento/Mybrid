@@ -45,11 +45,19 @@ class regulation():
 
         self.STRIKE = 2600
         self.DROP = 4080
+        self.sg = False
 
         if bits == 8:
             self.LET_OFF = self.LET_OFF / 16 - 1       # 12 to 8 bit ratio
             self.STRIKE = self.STRIKE / 16 - 1
             self.DROP = self.DROP / 16 - 1
+
+    def set_sav_gol(self, window_len, position):
+        self.sg = True
+        self.coeffs = savgol_coeffs(window_len, 2, deriv=1, use='dot', delta=0.01, pos=position)
+
+    def savgol_midi(self):
+        return 80
 
 
 def midi_vel(delta_time, r):
@@ -97,6 +105,17 @@ def plot_midi_all_regulations(data, time, bits, label="", options=['small', 'med
         r = regulation(range=range, bits=bits)
         midi_data, time_data = parse_ADC_data(data, time, r)
         ax.plot(time_data, midi_data, label=prefix+"comparator: " + range, linestyle=ls, linewidth=lw)
+    r = regulation(bits=bits)
+    for window_len in [13, 23]:
+        for position in ['center', 'end']:
+            suffix = "sg (" + str(window_len) + ", " + position + ")"
+            if position == 'center':
+                position = None
+            else:
+                position = window_len - 1
+            r.set_sav_gol(window_len, position)
+            midi_data, time_data = parse_ADC_data(data, time, r)
+            ax.plot(time_data, midi_data, label=prefix+ suffix, linestyle=ls, linewidth=lw)
 
 
 def finish_adc_plot(bits):
@@ -127,7 +146,10 @@ def parse_ADC_data(d, t, r):
         elif status == FLY:
             if dist < r.STRIKE:
                 status = SOUND
-                m = midi_vel(t[i] - start_time, r)
+                if not r.sg:
+                    m = midi_vel(t[i] - start_time, r)
+                else:
+                    m = r.savgol_midi()
                 if m == 0:
                     print("warning, apparent note-off data")
                 midi_data.append(0)                      # making the plot
@@ -146,6 +168,7 @@ def parse_ADC_data(d, t, r):
 
 if args.plot or args.midi_plot:
     import matplotlib.pyplot as plt      # importing here to allow saving without GTK
+    from scipy.signal import savgol_coeffs
 
 if args.bits_12:
     data = []
