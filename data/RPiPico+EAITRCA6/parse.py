@@ -140,8 +140,11 @@ def plot_midi_all_regulations(data, time, bits, label="", options=None):
         window_options = [13, 23]
         position_options = ['center', 'end']
 
+    gg = 0
     for window_len in window_options:
         for position in position_options:
+            lw = gg + 1
+            ls = ['-', '--', '-.', ':'][gg % 4]
             suffix = "sg (" + str(window_len) + ", " + position + ")"
             if position == 'center':
                 position = None
@@ -150,6 +153,7 @@ def plot_midi_all_regulations(data, time, bits, label="", options=None):
             r.set_sav_gol(window_len, position)
             midi_data, time_data = parse_ADC_data(data, time, r)
             ax.plot(time_data, midi_data, label=prefix+suffix, linestyle=ls, linewidth=lw)
+            gg += 1
 
 
 def finish_adc_plot(bits):
