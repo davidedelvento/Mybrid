@@ -102,7 +102,9 @@ def print_stats(time):
         print("mode =", statistics.mode(delta_t))
 
 
-def plot_midi_all_regulations(data, time, bits, label="", options=['small', 'medium', 'large']):
+def plot_midi_all_regulations(data, time, bits, label="", options=None):
+    if options is None:
+        options = ['small', 'medium', 'large']
     prefix = ""
     if label != "":
         prefix = label + " "
@@ -122,7 +124,7 @@ def plot_midi_all_regulations(data, time, bits, label="", options=['small', 'med
                 position = window_len - 1
             r.set_sav_gol(window_len, position)
             midi_data, time_data = parse_ADC_data(data, time, r)
-            ax.plot(time_data, midi_data, label=prefix+ suffix, linestyle=ls, linewidth=lw)
+            ax.plot(time_data, midi_data, label=prefix+suffix, linestyle=ls, linewidth=lw)
 
 
 def finish_adc_plot(bits):
