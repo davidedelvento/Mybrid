@@ -105,14 +105,14 @@ int main() {
 
   for(int i=0; i<N_ADC; i++) {
     status[i] = IDLE;
-    LET_OFF[i] = 2500;
-    STRIKE[i] = 2100;
-    DROP[i] = 3000;
+    LET_OFF[i] = 2700;
+    STRIKE[i] = 2600;
+    DROP[i] = 4080;
     // see https://pianoclack.com/forum/d/289-scanning-speed-and-velocity-mapping-of-cybrid/3
     // MIDI_VEL  = 57.96 + 71.3 * log10f(2.0 / time) =
     //           = 57.96 + 71.3 * log10f(2.0) - 71.3 * log10f(time)
-    VEL_CONST[i] = 57.96 + 71.3 * log10f(2.0);
-    VEL_SLOPE[i] = 71.3;
+    VEL_SLOPE[i] = 40;
+    VEL_CONST[i] = 40 + VEL_SLOPE[i] * log10f(1000);
     // perhaps not much would be lost by making these integers?
   }
 
@@ -372,7 +372,7 @@ void parse_distance(uint8_t *status, uint16_t d, uint32_t *start_time, uint8_t n
 #elif defined MIDI_CONTROLLER
         tud_midi_stream_write(0, msg_on, 3);
 #endif
-      } else if (d > LET_OFF[note]) {
+      } else if (d > DROP[note]) {
         *status = IDLE;
       }
       break;
