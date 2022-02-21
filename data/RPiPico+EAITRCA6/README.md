@@ -3,16 +3,29 @@
 To capture data at the highest temporal resolution possible and avoid the problem mentioned below,
 I am using an SD card with the code I posted [here](https://github.com/davidedelvento/no-OS-FatFS-SD-SPI-RPi-Pico/blob/master/example/tests/big_file_test.c#L66-L81)
 
-That information is in the `hires` directory and it is bzip2'ed RAW binary format. The `parse.py` script
+That data is in the `hires` and in the `battery` directories and it is bzip2'ed RAW binary format. The `parse.py` script
 can extract that and dump it in text format, plot it or pretend to be a Pico and print information
 about what MIDI velocities would that setting create
 
-See https://pianoclack.com/forum/d/289-scanning-speed-and-velocity-mapping-of-cybrid/121 for some 
-plots and download the data in `txt` format
+Given the high level of noise showed in the `hires` data and following some discussion at the link below about what might be causing
+that noise, I speculated the noise being caused but the SMPS of the Pico. Following guidance from the data sheet, I tried a
+number of things, including providing a `ADC_VREF` via a CR2032 battery. That helped a bit, but not substantially. So I decided
+to power the Pico via two C cells in series, applied to the `3V3` (pin 36 of the Pico board) and to `ADC_VREF`. Yes, that's
+supposed to be an "out" voltage, and I hickajed it to injected the power after the switching supply.
+To avoid the (minimal?) risk of voltage flowing backwards through the regulator I also grounde out 3V3_EN pin 37 of the Pico board).
+
+The internal resistance of the battery was a bit of a problem: voltage dropped to 3.05V during the test, and I was not sure that was sufficent
+to power the Pico correctly (remember, this is bypassing the power regulator and forcing the board to run on exactly this voltage). The
+battery series returned to 3.2V when I removed the load. 
+My code was able to complete the ADC capture without attaching a computer. Look how clean it is!
+
+
+See also https://pianoclack.com/forum/d/289-scanning-speed-and-velocity-mapping-of-cybrid/121 and 
+https://pianoclack.com/forum/d/347-how-to-deal-with-hyperlocality-in-savitzky-golay-filtering/23
 
 
 
-# Less relevant information
+# Less relevant, older information
 
 The data in this directory is (bzip2 compressed) capture of hammer strikes. The capture has been performed with
 [MyTechnician](https://github.com/davidedelvento/Mybrid/tree/main/MyTechnician/mytechnician).
