@@ -1,6 +1,6 @@
 # Status
 
-To capture data at the highest temporal resolution possible and avoid the problem mentioned below,
+To capture data at the highest temporal resolution possible and avoid the problem mentioned in the "Less relevant, older information" section below,
 I am using an SD card with the code I posted [here](https://github.com/davidedelvento/no-OS-FatFS-SD-SPI-RPi-Pico/blob/master/example/tests/big_file_test.c#L66-L81)
 
 That data is in the `hires` and in the `battery` directories and it is bzip2'ed RAW binary format. The `parse.py` script
