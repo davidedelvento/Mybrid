@@ -1,6 +1,6 @@
 # Status
 
-To capture data at the highest temporal resolution possible and avoid the problem mentioned below,
+To capture data at the highest temporal resolution possible and avoid the problem mentioned in the "Less relevant, older information" section below,
 I am using an SD card with the code I posted [here](https://github.com/davidedelvento/no-OS-FatFS-SD-SPI-RPi-Pico/blob/master/example/tests/big_file_test.c#L66-L81)
 
 That data is in the `hires` and in the `battery` directories and it is bzip2'ed RAW binary format. The `parse.py` script
@@ -9,16 +9,29 @@ about what MIDI velocities would that setting create
 
 Given the high level of noise showed in the `hires` data and following some discussion at the link below about what might be causing
 that noise, I speculated the noise being caused but the SMPS of the Pico. Following guidance from the data sheet, I tried a
-number of things, including providing a `ADC_VREF` via a CR2032 battery. That helped a bit, but not substantially. So I decided
-to power the Pico via two C cells in series, applied to the `3V3` (pin 36 of the Pico board) and to `ADC_VREF`. Yes, that's
+number of things, including providing a `ADC_VREF` via a CR2032 battery and forcing the PWM mode on the power supply (simply with
+`gpio_pull_up(23)`).  That helped a bit, but not substantially. So I decided
+to power the Pico via two [C-cell batteries](https://en.wikipedia.org/wiki/C_battery) in series, applied to the `3V3`
+(pin 36 of the Pico board) and to `ADC_VREF`. Yes, that's
 supposed to be an "out" voltage, and I hickajed it to injected the power after the switching supply.
-To avoid the (minimal?) risk of voltage flowing backwards through the regulator I also grounde out 3V3_EN pin 37 of the Pico board).
+To avoid the (minimal?) risk of voltage flowing backwards through the regulator I also grounded out 3V3_EN pin 37 of the Pico board).
 
+The series measured 3.2V before the test.
 The internal resistance of the battery was a bit of a problem: voltage dropped to 3.05V during the test, and I was not sure that was sufficent
 to power the Pico correctly (remember, this is bypassing the power regulator and forcing the board to run on exactly this voltage). The
 battery series returned to 3.2V when I removed the load. 
-My code was able to complete the ADC capture without attaching a computer. Look how clean it is!
+My code was able to complete the ADC capture without attaching a computer. Look how clean it is compared to the PWM! Note the difference in
+the vertical scale. 
 
+![PWM power](https://github.com/davidedelvento/Mybrid/blob/main/data/RPiPico%2BEAITRCA6/battery/detail_pwm.png)
+
+![Battery power](https://github.com/davidedelvento/Mybrid/blob/main/data/RPiPico%2BEAITRCA6/battery/detail_battery.png)
+
+I am not sure about what may be causing that residual 160Hz modulation, it might be the Pico itself or it may be some external signal.
+The signal here is from an IR phototransistor, and there was background artificial light, so the 60Hz power supply might
+be playing a role (the test was performed in the USA).
+
+More tests with a very accurate power supply and a signal generator are due.
 
 See also https://pianoclack.com/forum/d/289-scanning-speed-and-velocity-mapping-of-cybrid/121 and 
 https://pianoclack.com/forum/d/347-how-to-deal-with-hyperlocality-in-savitzky-golay-filtering/23
