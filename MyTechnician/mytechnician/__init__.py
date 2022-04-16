@@ -2,7 +2,7 @@
 
 import mido
 from mido import Message, MidiFile, MidiTrack
-from cdefine import CDefine
+from dissect.cstruct import cstruct
 
 import threading
 import time
@@ -13,9 +13,11 @@ from collections import defaultdict
 
 pico_in  = mido.get_input_names()[1]           # NOQA -- I like this indentation better
 pico_out = mido.get_output_names()[1]
-defined = CDefine('../RaspberryPiPico/My_MIDI_constants.h')
+c=cstruct()
+with open('../RaspberryPiPico/My_MIDI_constants.h') as f:
+  c.load(f.read())
 
-midi_strings = defined.__dict__
+midi_strings = c.consts
 
 midi_values = {}
 for k in midi_strings.keys():
