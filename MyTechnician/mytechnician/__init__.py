@@ -16,12 +16,16 @@ pico_out = mido.get_output_names()[1]
 defined = CDefine('../RaspberryPiPico/My_MIDI_constants.h')
 
 midi_strings = defined.__dict__
+
 midi_values = {}
-for k in defined.__dict__.keys():
-    value = defined.__dict__[k]
+for k in midi_strings.keys():
+    value = midi_strings[k]
     if value in midi_values:
         print("Warning, duplicated value", value, "for", midi_values[value], "and", k, file=sys.stderr)
-    midi_values[defined.__dict__[k]] = k
+    midi_values[midi_strings[k]] = k
+
+print(midi_strings)
+print(midi_values)
 
 
 class mt:
